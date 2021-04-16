@@ -2,10 +2,10 @@
 **P**ython-based **h**uman-**i**n-the-**l**oop (HITL) **i**terative **s**egmentation platform (Philis) <br>
 
 Philis integrated <br>
-    (1) generation of the ground truth data sets, <br>
-    (2) correcting the results of deep learning-based segmentations, <br>
-    (3) post-processing, such as restrictive thresholding, object quantification, and structure visualization, <br>
-  in a single user-friendly application running on Python.
+&nbsp;&nbsp;&nbsp;&nbsp; (1) generation of the ground truth data sets, <br>
+&nbsp;&nbsp;&nbsp;&nbsp; (2) correcting the results of deep learning-based segmentations, <br>
+&nbsp;&nbsp;&nbsp;&nbsp; (3) post-processing, such as restrictive thresholding, object quantification, and structure visualization, <br>
+&nbsp;&nbsp;  in a single user-friendly application running on Python.
 
 # Authors <br>
 
