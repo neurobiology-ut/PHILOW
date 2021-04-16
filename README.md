@@ -1,5 +1,5 @@
 # Philis <br>
-**P**ython-based **h**uman-**i**n-the-**l**oop (HITL) **i**terative **s**egmentation platform (Philis) <br>
+***P***ython-based ***h***uman-***i***n-the-***l***oop (HITL) ***i***terative ***s***egmentation platform (Philis) <br>
 
 Philis integrated <br>
 &nbsp;&nbsp;&nbsp;&nbsp; (1) generation of the ground truth data sets, <br>
