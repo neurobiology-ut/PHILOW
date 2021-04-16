@@ -1,5 +1,5 @@
 # Philis <br>
-
+Python-based human-in-the-loop (HITL) iterative segmentation platform (Philis) <br>
 # Authors <br>
 
 Shogo Suga - <br>
