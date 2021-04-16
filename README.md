@@ -4,4 +4,4 @@ Python-based human-in-the-loop (HITL) iterative segmentation platform (Philis) <
 
 Shogo Suga - <br>
 Hiroki Kawai - <br>
-Yusuke Hirabayashi - Supervisor <br>
+<a href="http://park.itc.u-tokyo.ac.jp/Hirabayashi/WordPress/">Yusuke Hirabayashi</a> - Supervisor <br>
