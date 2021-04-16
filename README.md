@@ -9,6 +9,6 @@ Philis integrated <br>
 
 # Authors <br>
 
-Shogo Suga - <br>
-Hiroki Kawai - <br>
-<a href="http://park.itc.u-tokyo.ac.jp/Hirabayashi/WordPress/">Yusuke Hirabayashi</a> - Supervisor <br>
+Shogo Suga <br>
+Hiroki Kawai <br>
+<a href="http://park.itc.u-tokyo.ac.jp/Hirabayashi/WordPress/">Yusuke Hirabayashi</a> 
