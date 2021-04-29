@@ -15,7 +15,6 @@ from scipy import ndimage
 
 import utils
 from utils import normalize_x, denormalize_y, annotation_to_input
-from model import get_unet_128
 from dock import Datamanager
 
 
