@@ -1,5 +1,5 @@
-# Philis <br>
-***P***ython-based ***h***uman-***i***n-the-***l***oop (HITL) ***i***terative ***s***egmentation platform (Philis) <br>
+# PHILOW <br>
+***P***ython-based platform for ***h***uman-***i***n-the-***l***oop (HITL) ***i***terative ***w***orkflow (PHILOW) <br>
 
 ## Overview 
 Philis integrated <br>
