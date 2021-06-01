@@ -13,8 +13,8 @@ Philis integrated <br>
 Clone this repository first.   
 Then install requirements.
 ```angular2
-git clone https://github.com/neurobiology-ut/Philis.git
-cd Philis
+git clone https://github.com/neurobiology-ut/PHILOW.git
+cd PHILOW
 pip install requirements.txt
 ```
 
