@@ -28,9 +28,9 @@ python napari_view_simple.py
 
 2) select original dir : all slices must be in separate PNG and must be sequentially numbered (e.g. 000.png, 001.png ...)
 
-3) start new project?
-yes → do not need to select mask dir
-no → select saved labels dir
+3) start new project?    
+yes → do not need to select mask dir    
+no → select saved labels dir    
 
 4) enter a name for the label or model you want to create (e.g. mito, cristae, ...)   
 This name will be used as the directory name of the newly created mask dir if no mask dir is specified, 
