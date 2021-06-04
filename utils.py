@@ -1,32 +1,22 @@
 import datetime
 import os
-import sys
-from pathlib import Path
 
 import dask_image.imread
 import numpy as np
 import pandas as pd
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QSizePolicy, QHBoxLayout, QLabel, QFileDialog, \
-    QVBoxLayout
-from skimage.filters import gaussian
+from PyQt5.QtWidgets import QWidget, QHBoxLayout
+from pathlib import Path
 from skimage import io
+from skimage.filters import gaussian
 
 
-# 値を-1から1に正規化する関数
 def normalize_x(image):
     image = image/127.5 - 1
     return image
 
 
-# 値を0から1に正規化する関数
 def normalize_y(image):
     image = image/255
-    return image
-
-
-# 値を0から255に戻す関数
-def denormalize_y(image):
-    image = image*255
     return image
 
 
@@ -115,49 +105,6 @@ def load_raw_masks(raw_mask_dir):
     images_raw = images_raw.compute()
     base_label = np.where((126 < images_raw) & (images_raw < 171), 255, 0)
     return base_label
-
-'''
-def save_annotations(labels):
-    class App(QWidget):
-        def __init__(self):
-            super().__init__()
-            self.out_path = ""
-            self.btn1 = QPushButton('Select', self)
-            self.btn1.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-            self.btn1.clicked.connect(self.show_dialog_out)
-            self.btn2 = QPushButton('Save', self)
-            self.btn2.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-            self.btn2.clicked.connect(self.save_masks)
-            self.lbl1 = QLabel('save dir', self)
-            self.labels = labels
-            self.build()
-
-        def build(self):
-            box = QVBoxLayout()
-            box.addWidget(combine_blocks(self.btn1, self.lbl1))
-            box.addWidget(self.btn2)
-
-            self.setLayout(box)
-            self.show()
-
-        def show_dialog_out(self):
-            default_path = max(self.opath, self.modpath, os.path.expanduser('~'))
-            f_name = QFileDialog.getExistingDirectory(self, 'Select Directory', default_path)
-            if f_name:
-                self.out_path = f_name
-                self.lbl1.setText(self.out_path)
-
-        def save_masks(self):
-            num = self.labels.shape[0]
-            for i in range(num):
-                label = self.labels[i]
-                io.imsave(os.path.join(self.out_path, str(i).zfill(4) + '.png'), label)
-
-    app = QApplication(sys.argv)
-    ex1 = App()
-    ex1.show()
-    app.exec()
-'''
 
 
 def combine_blocks(block1, block2):

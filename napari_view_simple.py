@@ -1,20 +1,17 @@
 import copy
-import os
-from pathlib import Path
-from random import random
 
+import matplotlib.pyplot as plt
 import napari
-from PyQt5.QtWidgets import QFileDialog, QSizePolicy, QSlider
-from PyQt5.QtCore import Qt
-from magicgui import magicgui
 import numpy as np
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QSizePolicy, QSlider
+from magicgui import magicgui
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
+from pathlib import Path
 from scipy import ndimage
 
 import utils
-from utils import normalize_x, denormalize_y, annotation_to_input
 from dock import Datamanager
 
 
