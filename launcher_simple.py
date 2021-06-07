@@ -5,12 +5,12 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QSi
                              QTabWidget, QLineEdit, QCheckBox)
 import numpy as np
 from skimage import io
+import napari
 
 import utils
 from napari_view_simple import launch_viewers
 
 
-# テキストフォーム中心の画面のためQMainWindowを継承する
 class PredictionsLoader(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
@@ -294,21 +294,18 @@ class App(QTabWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("napari launcher")
-        # 1個1個のタブがメニューに対応
         self.tab1 = Entrance(self)
         self.tab2 = PredictionsLoader(self)
         self.tab3 = ModificationsLoader(self)
         self.tab4 = InitialLoader(self)
 
-        # タブページに追加
+        # add to tab page
         self.addTab(self.tab1, "Entrance")
         self.addTab(self.tab2, "PredictionsLoader")
         self.addTab(self.tab3, "ModificationsLoader")
         self.addTab(self.tab4, "InitialLoader")
 
-        # タブパネルのボーダーを削除
         self.setStyleSheet("QTabWidget::pane { border: 0; }")
-        # タブバーを非表示に(↓をコメントすると動きがわかりやすくなるかも)
         self.tabBar().hide()
         self.resize(500, 400)
 
@@ -323,7 +320,6 @@ def combine_blocks(block1, block2):
 
 
 if __name__ == '__main__':
-    import napari
     with napari.gui_qt():
         view_l = napari.Viewer()
         launcher = App()
