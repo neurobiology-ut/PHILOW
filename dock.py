@@ -103,7 +103,7 @@ class Datamanager(QWidget):
         :return: データフレームとtrainingデータの場所
         :rtype (pandas.DataFrame, str)
         """
-        labels = sorted(list(Path(label_dir).glob('./*png')))
+        labels = sorted(list(str(path).split("/")[-1] for path in Path(label_dir).glob('./*png')))
         df = pd.DataFrame({'filename': labels,
                            'train': ['Not Checked']*len(labels)})
         csv_path = os.path.join(label_dir, f'{model_type}_train0.csv')
