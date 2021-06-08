@@ -1,5 +1,5 @@
-# Philis <br>
-***P***ython-based ***h***uman-***i***n-the-***l***oop (HITL) ***i***terative ***s***egmentation platform (Philis) <br>
+# PHILOW <br>
+***P***ython-based platform for ***h***uman-***i***n-the-***lo***op (HITL)  ***w***orkflow (PHILOW) <br>
 
 ## Overview 
 Philis integrated <br>
@@ -13,8 +13,8 @@ Philis integrated <br>
 Clone this repository first.   
 Then install requirements.
 ```angular2
-git clone https://github.com/neurobiology-ut/Philis.git
-cd Philis
+git clone https://github.com/neurobiology-ut/PHILOW.git
+cd PHILOW
 pip install requirements.txt
 ```
 
