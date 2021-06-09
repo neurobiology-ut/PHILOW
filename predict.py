@@ -30,8 +30,7 @@ def predict(X_test, model_path, out_dir, input_shape=(512, 512, 1), num_classes=
             cv2.imwrite(os.path.join(out_dir, str(i).zfill(6) + '.png'), denormalize_y(y))
 
 
-def predict_3ax(ori_imgs, model_path, out_dir, input_shape=(512, 512, 1), num_classes=1, merge_labels=False,
-                previous_label_dir=None):
+def predict_3ax(ori_imgs, model_path, out_dir, input_shape=(512, 512, 1), num_classes=1):
 
     os.makedirs(out_dir, exist_ok=True)
 
