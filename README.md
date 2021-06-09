@@ -89,7 +89,7 @@ python napari_view_simple.py
    
 6) click on the "predict" button   
 
-
+ 
 # Authors <br>
 
 Shogo Suga <br>
