@@ -88,7 +88,7 @@ python napari_view_simple.py
 5) select output dir for predicted labels   
    
 6) click on the "predict" button   
-
+ 
  　
 # Authors <br>
 
