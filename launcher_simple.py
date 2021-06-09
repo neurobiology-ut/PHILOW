@@ -173,9 +173,16 @@ class Trainer(QWidget):
             label_imgs=label_imgs,
             ori_filenames=ori_filenames,
         )
+        devided_train_ori_imgs = utils.divide_imgs(train_ori_imgs)
+        devided_train_label_imgs = utils.divide_imgs(train_label_imgs)
+        devided_train_label_imgs = np.where(
+            devided_train_label_imgs < 0,
+            0,
+            devided_train_label_imgs
+        )
         train_unet(
-            X_train=train_ori_imgs,
-            Y_train=train_label_imgs,
+            X_train=devided_train_ori_imgs,
+            Y_train=devided_train_label_imgs,
             csv_path=os.path.join(self.modelpath, "train_log.csv"),
             model_path=os.path.join(self.modelpath, "model.hdf5"),
             input_shape=(512, 512, 1),
