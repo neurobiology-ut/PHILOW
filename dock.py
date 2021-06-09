@@ -2,25 +2,13 @@ import os
 import shutil
 from pathlib import Path
 
+import pandas as pd
 from qtpy.QtWidgets import (
-    QButtonGroup,
     QWidget,
     QPushButton,
-    QSlider,
-    QCheckBox,
-    QLabel,
-    QSpinBox,
     QHBoxLayout,
     QVBoxLayout,
-    QFileDialog,
-    QComboBox,
-    QGridLayout,
-    QGroupBox,
 )
-
-from qtpy.QtCore import Qt
-import pandas as pd
-
 
 GUI_MAXIMUM_WIDTH = 225
 GUI_MAXIMUM_HEIGHT = 350
@@ -60,25 +48,22 @@ class Datamanager(QWidget):
 
     def prepare(self, label_dir, model_type, checkbox):
         """
-        初期動作
-        :param str label_dir:labelのpath
-        :param str model_type:modelのtype
-        :param bool checkbox:新しいdatasetを作るかどうか
+        :param str label_dir:label path
+        :param str model_type:model type
+        :param bool checkbox: create new dataset or not
         """
         self.df, self.csv_path = self.load_csv(label_dir, model_type, checkbox)
         print(self.csv_path, checkbox)
-        #self.check_all_data_and_mod()
         self.update(0)
-        # return df, train_data_dir, csv_path
 
     def load_csv(self, label_dir, model_type, checkbox):
         """
-        csvをloadし、一番新しいcsvをloadするか、csvがなければ生成する
-        :param str label_dir: labelのpath
-        :param str model_type:modelのtype
-        :param bool checkbox:新しいdatasetを作るかどうか
-        :return: データフレーム、trainingデータの場所、csvのpath
-        :rtype (pandas.DataFrame, str, str)
+        load newes cs or create new csv
+        :param str label_dir: label path
+        :param str model_type:model type
+        :param bool checkbox: create new dataset or not
+        :return: dataframe、csv path
+        :rtype (pandas.DataFrame, str)
         """
         csvs = sorted(list(Path(label_dir).glob(f'{model_type}*.csv')))
         if len(csvs) == 0:
@@ -92,15 +77,14 @@ class Datamanager(QWidget):
                 df.to_csv(csv_path)
             else:
                 pass
-            #train_data_dir = os.path.join(f'./training', os.path.splitext(os.path.basename(csv_path))[0])
         return df, csv_path
 
     def create(self, label_dir, model_type):
         """
-        新しいdataframeを作成し、csvの保存とtrainingデータの場所を作成
-        :param str label_dir: labelのpath
-        :param str model_type:modelのtype
-        :return: データフレームとtrainingデータの場所
+        Create a new dataframe and save the csv
+        :param str label_dir: label path
+        :param str model_type : model type
+        :return: dataframe, csv path
         :rtype (pandas.DataFrame, str)
         """
         labels = sorted(list(str(path).split("/")[-1] for path in Path(label_dir).glob('./*png')))
@@ -108,8 +92,6 @@ class Datamanager(QWidget):
                            'train': ['Not Checked']*len(labels)})
         csv_path = os.path.join(label_dir, f'{model_type}_train0.csv')
         df.to_csv(csv_path)
-        #train_data_dir = f'./training/{model_type}_train0'
-        # TODO 学習用の場所を指定できるように
         return df, csv_path
 
     def update(self, slice_num):
@@ -117,17 +99,14 @@ class Datamanager(QWidget):
         self.button.setText(self.df.at[self.df.index[self.slice_num], 'train'])
 
     def button_func(self):
-        """ ボタンがトグルされたときのスロット """
         if self.button.text() == 'Not Checked':
             self.button.setText('Checked')
             self.df.at[self.df.index[self.slice_num], 'train'] = 'Checked'
             self.df.to_csv(self.csv_path)
-            #self.move_data()
         else:
             self.button.setText('Not Checked')
             self.df.at[self.df.index[self.slice_num], 'train'] = 'Not Checked'
             self.df.to_csv(self.csv_path)
-            #self.delete_data()
 
     def move_data(self):
         shutil.copy(self.df.at[self.df.index[self.slice_num], 'filename'], self.train_data_dir)
