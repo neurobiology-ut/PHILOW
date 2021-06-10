@@ -2,10 +2,14 @@
 ***P***ython-based platform for ***h***uman-***i***n-the-***lo***op (HITL)  ***w***orkflow (PHILOW) <br>
 
 ## Overview 
-Philis integrated <br>
-&nbsp;&nbsp;&nbsp;&nbsp; (1) generation of the ground truth data sets, <br>
-&nbsp;&nbsp;&nbsp;&nbsp; (2) correcting the results of deep learning-based segmentations, <br>
-&nbsp;&nbsp;&nbsp;&nbsp; (3) post-processing, such as restrictive thresholding, object quantification, and structure visualization, <br>
+PHILOW is an interactive deep learning-based platform for 3D datasets implemented on top of [napari](https://github.com/napari/napari) <br>
+
+Features:
+
+&nbsp;&nbsp;&nbsp;&nbsp; (1) generation of the ground truth data sets with annotation assistance, visualization and data management tools<br>
+&nbsp;&nbsp;&nbsp;&nbsp; (2) model training and prediction <br>
+&nbsp;&nbsp;&nbsp;&nbsp; (3) correcting the results of deep learning-based segmentations <br>
+&nbsp;&nbsp;&nbsp;&nbsp; (4) iterate this process to get efficient and good results in a short time  <br>
 &nbsp;&nbsp;  in a single user-friendly application running on Python.
 
 
