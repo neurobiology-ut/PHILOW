@@ -98,7 +98,7 @@ python launcher_simple.py
 ### train and predict with Google Colab   
 If you don't have a GPU machine, you can use Google Colab to perform GPU-based training and prediction for free.    
 
-1) Open [train and predict notebook](https://github.com/neurobiology-ut/PHILOW/blob/feature/readme/notebooks/train_and_pred_using_PHILOW.ipynb) and click "Open in Colab" button
+1) Open [train and predict notebook](https://github.com/neurobiology-ut/PHILOW/blob/develop/notebooks/train_and_pred_using_PHILOW.ipynb) and click "Open in Colab" button
 
 2) You can upload your own dataset to train and predict, or try it on demo data   
 
