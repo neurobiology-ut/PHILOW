@@ -26,7 +26,7 @@ pip install requirements.txt
 ## Usage
 #### load dataset
 ```angular2
-python napari_view_simple.py
+python launcher_simple.py
 ```
 1) select Loader
 
@@ -66,7 +66,7 @@ If you want to use the currently displayed slice as your training data, click th
 #### train
 To train on your GPU machine, open launcher at first.
 ```angular2
-python napari_view_simple.py
+python launcher_simple.py
 ```
 1) select Trainer   
    
@@ -81,7 +81,7 @@ python napari_view_simple.py
 #### predict
 To predict labels on your machine, open launcher at first.   
 ```angular2
-python napari_view_simple.py
+python launcher_simple.py
 ```
 1) select Predicter
    
