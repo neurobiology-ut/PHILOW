@@ -57,6 +57,8 @@ If you want to save your label, click the "save" button on the bottom right.
 We are providing a way to manage the dataset for use in training.   
 If you want to use the currently displayed slice as your training data, click the 'Not Checked' button near the center left to display 'Checked'.
 
+
+### train and pred with your gpu machine
 #### train
 To train on your GPU machine, open launcher at first.
 ```angular2
@@ -88,6 +90,15 @@ python napari_view_simple.py
 5) select output dir for predicted labels   
    
 6) click on the "predict" button   
+
+### train and predict with Google Colab   
+If you don't have a GPU machine, you can use Google Colab to perform GPU-based training and prediction for free.    
+
+1) Open [train and predict notebook](https://github.com/neurobiology-ut/PHILOW/blob/feature/readme/notebooks/train_and_pred_using_PHILOW.ipynb) and click "Open in Colab" button
+
+2) You can upload your own dataset to train and predict, or try it on demo data   
+
+
  
  　
 # Authors <br>
