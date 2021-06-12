@@ -54,6 +54,16 @@ more information → https://napari.org/tutorials/fundamentals/labels.html
 If you want to see orthogonal view, click on the location you want to see while holding down the Shift button.    
 The image from xy, yz, and zx will be displayed on the right side of the screen.
 
+#### Low confident layer
+If you are in the second iteration and you are loading the prediction results, you will see a low confidence layer.    
+This shows the area where the confidence of the prediction result is low.    
+Use this as a reference for correction.   
+
+#### Small object layer
+We provide a small object layer to find small painted areas.   
+This is a layer for displaying small objects.   
+The slider widget on the left allows you to change the maximum object size to be displayed.   
+
 #### save labels
 If you want to save your label, click the "save" button on the bottom right.
 
@@ -77,6 +87,8 @@ python launcher_simple.py
 4) select dir for save trained model   
    
 5) click on the "start training" button   
+
+6) Check the command line for the progress of training. If you want to stop in the middle, use ctrl+C.   
    
 #### predict
 To predict labels on your machine, open launcher at first.   
@@ -93,7 +105,9 @@ python launcher_simple.py
    
 5) select output dir for predicted labels   
    
-6) click on the "predict" button   
+6) click on the "predict" button  
+
+7) Check the command line for the progress of prediction. If you want to stop in the middle, use ctrl+C.    
 
 ### train and predict with Google Colab   
 If you don't have a GPU machine, you can use Google Colab to perform GPU-based training and prediction for free.    
