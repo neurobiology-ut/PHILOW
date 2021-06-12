@@ -4,11 +4,13 @@ import matplotlib.pyplot as plt
 import napari
 import numpy as np
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QSizePolicy, QSlider
+from PyQt5.QtWidgets import QSizePolicy, QSlider, QLabel
 from magicgui import magicgui
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from pathlib import Path
+
+from napari._qt.qthreading import thread_worker
 from scipy import ndimage
 
 import utils
@@ -36,15 +38,18 @@ def launch_viewers(original, base, raw, r_path, model_type, checkbox):
                         blending='additive')
     else:
         pass
-    labeled = ndimage.label(base_label, structure=np.ones((3, 3, 3)))[0]
 
-    mks, nums = np.unique(labeled, return_counts=True)
+    def label_and_sort(base_label):
+        labeled = ndimage.label(base_label, structure=np.ones((3, 3, 3)))[0]
 
-    idx_list = list(np.argsort(nums[1:]))
-    nums = np.sort(nums[1:])
-    labeled_sorted = np.zeros_like(labeled)
-    for i, idx in enumerate(idx_list):
-        labeled_sorted = np.where(labeled == mks[1:][idx], i+1, labeled_sorted)
+        mks, nums = np.unique(labeled, return_counts=True)
+
+        idx_list = list(np.argsort(nums[1:]))
+        nums = np.sort(nums[1:])
+        labeled_sorted = np.zeros_like(labeled)
+        for i, idx in enumerate(idx_list):
+            labeled_sorted = np.where(labeled == mks[1:][idx], i+1, labeled_sorted)
+        return labeled_sorted, nums
 
     def label_ct(labeled_array, nums, value):
         labeled_temp = copy.copy(labeled_array)
@@ -52,23 +57,35 @@ def launch_viewers(original, base, raw, r_path, model_type, checkbox):
         labeled_temp = np.where((labeled_temp < idx) & (labeled_temp != 0), 255, 0)
         return labeled_temp
 
-    labeled_c = label_ct(labeled_sorted, nums, 10)
+    def show_so_layer(args):
+        labeled_c, labeled_sorted, nums = args
+        so_layer = view1.add_image(labeled_c, colormap='cyan', name='small_object', blending='additive')
 
-    so_layer = view1.add_image(labeled_c, colormap='cyan', name='small_object', blending='additive')
+        object_slider = QSlider(Qt.Horizontal)
+        object_slider.setMinimum(0)
+        object_slider.setMaximum(100)
+        object_slider.setSingleStep(10)
+        object_slider.setValue(10)
 
-    def calc_object_callback(t_layer, value, labeled_array, nums):
-        t_layer.data = label_ct(labeled_array, nums, value)
+        object_slider.valueChanged[int].connect(lambda value=object_slider: calc_object_callback(so_layer, value,
+                                                                                                 labeled_sorted, nums))
 
-    object_slider = QSlider(Qt.Horizontal)
-    object_slider.setMinimum(0)
-    object_slider.setMaximum(100)
-    object_slider.setSingleStep(10)
-    object_slider.setValue(10)
+        lbl = QLabel('object size')
 
-    object_slider.valueChanged[int].connect(lambda value=object_slider: calc_object_callback(so_layer, value,
-                                                                                             labeled_sorted, nums))
+        slider_widget = utils.combine_blocks(lbl, object_slider)
 
-    view1.window.add_dock_widget(object_slider, name='object_size_slider', area='left')
+        view1.window.add_dock_widget(slider_widget, name='object_size_slider', area='left')
+
+        def calc_object_callback(t_layer, value, labeled_array, nums):
+            t_layer.data = label_ct(labeled_array, nums, value)
+
+    @thread_worker(connect={"returned": show_so_layer})
+    def create_label():
+        labeled_sorted, nums = label_and_sort(base_label)
+        labeled_c = label_ct(labeled_sorted, nums, 10)
+        return labeled_c, labeled_sorted, nums
+
+    worker = create_label()
 
     layer = view1.layers[0]
     layer1 = view1.layers[1]
