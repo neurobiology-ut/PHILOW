@@ -166,7 +166,7 @@ class Trainer(QWidget):
     def trainer(self):
         ori_imgs, ori_filenames = utils.load_X_gray(self.opath)
         label_imgs, label_filenames = utils.load_Y_gray(self.labelpath, normalize=False)
-        train_csv = self.get_newest_csv(self.labelpath)
+        train_csv = self.get_newest_csv()
         train_ori_imgs, train_label_imgs = utils.select_train_data(
             dataframe=train_csv,
             ori_imgs=ori_imgs,
