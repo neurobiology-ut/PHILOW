@@ -4,7 +4,7 @@ from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 from models import get_nested_unet
 
 
-def train_unet(X_train, Y_train, csv_path, model_path, input_shape=(512, 512, 1), num_classes=1):
+def train_unet(X_train, Y_train, csv_path, model_path, model):
     Y_train = Y_train
     X_train = X_train
 
@@ -30,12 +30,10 @@ def train_unet(X_train, Y_train, csv_path, model_path, input_shape=(512, 512, 1)
     # combine generators into one which yields image and masks
     train_generator = (pair for pair in zip(image_generator, mask_generator))
 
-    model = get_nested_unet(input_shape=input_shape, num_classes=num_classes)
-
     BATCH_SIZE = 4
     NUM_EPOCH = 400
 
     callbacks = []
     callbacks.append(CSVLogger(csv_path))
-    history = model.fit_generator(train_generator,steps_per_epoch=32, epochs=NUM_EPOCH, verbose=1, callbacks=callbacks)
+    history = model.fit(train_generator,steps_per_epoch=32, epochs=NUM_EPOCH, verbose=1, callbacks=callbacks)
     model.save_weights(model_path)
