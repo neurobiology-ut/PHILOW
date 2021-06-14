@@ -1,14 +1,18 @@
 import os
 import shutil
+import time
 from pathlib import Path
+import io as IO
 
+import matplotlib.pyplot as plt
+import napari
+import numpy as np
+import pandas as pd
+from PIL import Image
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QSizePolicy, QLabel, QFileDialog,
                              QTabWidget, QLineEdit, QCheckBox)
-import numpy as np
 from napari.qt import thread_worker
 from skimage import io
-import napari
-import pandas as pd
 
 import utils
 from models import get_nested_unet
@@ -127,6 +131,7 @@ class Trainer(QWidget):
 
         self.model = None
         self.worker = None
+        self.worker2 = None
 
     def build(self):
         vbox = QVBoxLayout()
@@ -168,6 +173,30 @@ class Trainer(QWidget):
         csv = pd.read_csv(str(csvs[-1]), index_col=0)
         return csv
 
+    def update_layer(self, df):
+        plt.figure(figsize=(10, 5))
+        plt.subplot(1, 2, 1)
+        plt.plot(list(df['epoch']), list(df['dice_coeff']), label='dice_coeff')
+        plt.xlim(0, 400)
+        plt.ylim(0, 1)
+        plt.legend()
+        plt.subplot(1, 2, 2)
+        plt.plot(list(df['epoch']), list(df['loss']), label='loss')
+        plt.legend()
+        plt.xlim(0, 400)
+        buf = IO.BytesIO()
+        plt.savefig(buf, format='png')
+        buf.seek(0)
+        im = Image.open(buf)
+        im = np.array(im)
+        buf.close()
+        try:
+            view_l.layers['result'].data = im
+        except KeyError:
+            view_l.add_image(
+                im, name='result'
+            )
+
     def trainer(self):
         if self.worker:
             if self.worker.is_running:
@@ -198,6 +227,9 @@ class Trainer(QWidget):
             self.worker = self.train(devided_train_ori_imgs, devided_train_label_imgs, self.model)
             self.worker.started.connect(lambda: print("worker is running..."))
             self.worker.finished.connect(lambda: print("worker stopped"))
+            self.worker2 = self.yield_csv()
+            self.worker2.yielded.connect(self.update_layer)
+            self.worker2.start()
 
         if self.worker.is_running:
             self.model.stop_training = True
@@ -217,6 +249,14 @@ class Trainer(QWidget):
             model_path=os.path.join(self.modelpath, "model.hdf5"),
             model=model
         )
+
+    @thread_worker
+    def yield_csv(self):
+        while True:
+            df = pd.read_csv(os.path.join(self.modelpath, "train_log.csv"))
+            df['epoch'] = df['epoch'] + 1
+            yield df
+            time.sleep(30)
 
 
 class Predicter(QWidget):
@@ -253,7 +293,7 @@ class Predicter(QWidget):
         self.build()
 
         self.model_pred = None
-        self.worker_pred =None
+        self.worker_pred = None
 
     def build(self):
         vbox = QVBoxLayout()
