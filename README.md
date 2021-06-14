@@ -126,6 +126,6 @@ Hiroki Kawai <br>
 <a href="http://park.itc.u-tokyo.ac.jp/Hirabayashi/WordPress/">Yusuke Hirabayashi</a> 
 
 
-# References <br>
+# Reference <br>
 Shogo Suga, Koki Nakamura, Bruno M Humbel, Hiroki Kawai, Yusuke Hirabayashi, An interactive deep learning-based approach reveals mitochondrial cristae topologies
 <a href="https://doi.org/10.1101/2021.06.11.448083">https://doi.org/10.1101/2021.06.11.448083</a>
