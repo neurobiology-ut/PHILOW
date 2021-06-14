@@ -126,6 +126,21 @@ Hiroki Kawai <br>
 <a href="http://park.itc.u-tokyo.ac.jp/Hirabayashi/WordPress/">Yusuke Hirabayashi</a> 
 
 
-# Reference <br>
+# How to Cite <br>
 Shogo Suga, Koki Nakamura, Bruno M Humbel, Hiroki Kawai, Yusuke Hirabayashi, An interactive deep learning-based approach reveals mitochondrial cristae topologies
 <a href="https://doi.org/10.1101/2021.06.11.448083">https://doi.org/10.1101/2021.06.11.448083</a>
+
+
+```
+@article {Suga2021.06.11.448083,
+	author = {Suga, Shogo and Nakamura, Koki and Humbel, Bruno M and Kawai, Hiroki and Hirabayashi, Yusuke},
+	title = {An interactive deep learning-based approach reveals mitochondrial cristae topologies},
+	elocation-id = {2021.06.11.448083},
+	year = {2021},
+	doi = {10.1101/2021.06.11.448083},
+	publisher = {Cold Spring Harbor Laboratory},
+	URL = {https://www.biorxiv.org/content/early/2021/06/11/2021.06.11.448083},
+	eprint = {https://www.biorxiv.org/content/early/2021/06/11/2021.06.11.448083.full.pdf},
+	journal = {bioRxiv}
+}
+```
