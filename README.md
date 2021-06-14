@@ -88,7 +88,7 @@ python launcher_simple.py
    
 5) Click on the "start training" button   
 
-6) Check the command line for the progress of training. If you want to stop in the middle, use ctrl+C.   
+6) Check the command line for the progress of training. If you want to stop in the middle, click stop button.   
    
 #### Predict
 To predict labels on your machine, open launcher at first.   

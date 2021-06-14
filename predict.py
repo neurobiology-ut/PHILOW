@@ -3,14 +3,11 @@ import os
 import cv2
 import numpy as np
 
-from models import get_nested_unet
 from utils import denormalize_y, divide_imgs, load_Y_gray, merge_imgs
 
 
-def predict(X_test, model_path, out_dir, input_shape=(512, 512, 1), num_classes=1):
-    model = get_nested_unet(input_shape=input_shape, num_classes=num_classes)
+def predict(X_test, model, out_dir):
 
-    model.load_weights(model_path)
     BATCH_SIZE = 1
     Y_pred = model.predict(X_test, BATCH_SIZE)
 
@@ -30,7 +27,7 @@ def predict(X_test, model_path, out_dir, input_shape=(512, 512, 1), num_classes=
             cv2.imwrite(os.path.join(out_dir, str(i).zfill(6) + '.png'), denormalize_y(y))
 
 
-def predict_3ax(ori_imgs, model_path, out_dir, input_shape=(512, 512, 1), num_classes=1):
+def predict_3ax(ori_imgs, model, out_dir):
 
     os.makedirs(out_dir, exist_ok=True)
 
@@ -39,10 +36,8 @@ def predict_3ax(ori_imgs, model_path, out_dir, input_shape=(512, 512, 1), num_cl
 
     predict(
         X_test=seped_xy_imgs,
-        model_path=model_path,
+        model=model,
         out_dir=os.path.join(out_dir, "pred_xy"),
-        input_shape=input_shape,
-        num_classes=num_classes
     )
 
     # YZ
@@ -50,10 +45,8 @@ def predict_3ax(ori_imgs, model_path, out_dir, input_shape=(512, 512, 1), num_cl
 
     predict(
         X_test=seped_yz_imgs,
-        model_path=model_path,
+        model=model,
         out_dir=os.path.join(out_dir, "pred_yz"),
-        input_shape=input_shape,
-        num_classes=num_classes
     )
 
     # ZX
@@ -61,10 +54,8 @@ def predict_3ax(ori_imgs, model_path, out_dir, input_shape=(512, 512, 1), num_cl
 
     predict(
         X_test=seped_zx_imgs,
-        model_path=model_path,
+        model=model,
         out_dir=os.path.join(out_dir, "pred_zx"),
-        input_shape=input_shape,
-        num_classes=num_classes
     )
 
     ori_image_shape = ori_imgs.shape
