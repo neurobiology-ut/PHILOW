@@ -17,7 +17,7 @@ from skimage import io
 import utils
 from models import get_nested_unet
 from napari_view_simple import launch_viewers
-from predict import predict_3ax
+from predict import predict_3ax, predict_1ax
 from train import train_unet
 
 
@@ -280,6 +280,10 @@ class Predicter(QWidget):
         self.btn4.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.btn4.clicked.connect(self.show_dialog_outdir)
 
+        self.checkBox = QCheckBox("Check the box if you want to use TAP (Three-Axis-Prediction")
+        self.checkBox.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.checkBox.toggle()
+
         self.btn5 = QPushButton('predict', self)
         self.btn5.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.btn5.clicked.connect(self.predicter)
@@ -301,6 +305,7 @@ class Predicter(QWidget):
         vbox.addWidget(combine_blocks(self.btn2, self.lbl2))
         vbox.addWidget(combine_blocks(self.btn3, self.lbl3))
         vbox.addWidget(combine_blocks(self.btn4, self.lbl4))
+        vbox.addWidget(self.checkBox)
         vbox.addWidget(self.btn5)
         vbox.addWidget(self.btnb)
 
@@ -355,11 +360,33 @@ class Predicter(QWidget):
         self.model.load_weights(os.path.join(self.modelpath, "model.hdf5"))
 
         self.btn5.setText('predicting')
-        self.predict(ori_imgs)
+
+        if self.checkBox.isChecked() is True:
+            self.predict(ori_imgs)
+        else:
+            self.predict_single(ori_imgs)
 
     def predict(self, ori_imgs):
         try:
             predict_3ax(ori_imgs, self.model, self.outpath)
+        except Exception as e:
+            print(e)
+        if self.labelpath != "":
+            try:
+                csv, csv_path = self.get_newest_csv()
+                if csv:
+                    label_names = [node.filename for node in csv.itertuples() if node.train == "Checked"]
+                    for ln in label_names:
+                        shutil.copy(os.path.join(self.labelpath, ln), os.path.join(self.outpath, 'merged_prediction'))
+                    shutil.copy(str(csv_path), os.path.join(self.outpath, 'merged_prediction'))
+            except Exception as e:
+                print(e)
+
+        self.btn5.setText('predict')
+
+    def predict_single(self, ori_imgs):
+        try:
+            predict_1ax(ori_imgs, self.model, self.outpath)
         except Exception as e:
             print(e)
         if self.labelpath != "":

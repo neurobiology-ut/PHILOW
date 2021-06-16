@@ -104,10 +104,12 @@ python launcher_simple.py
 4) Select model dir contains hdf5 file   
    
 5) Select output dir for predicted labels   
-   
-6) Click on the "predict" button  
 
-7) Check the command line for the progress of prediction. If you want to stop in the middle, use ctrl+C.    
+6) Uncheck the box if you DO NOT want to use TAP (Three-Axis-Prediction)   
+   
+7) Click on the "predict" button  
+
+8) Check the command line for the progress of prediction. If you want to stop in the middle, use ctrl+C.    
 
 ### Train and predict with Google Colab   
 If you don't have a GPU machine, you can use Google Colab to perform GPU-based training and prediction for free.    

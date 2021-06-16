@@ -94,3 +94,45 @@ def predict_3ax(ori_imgs, model, out_dir):
             0
         )
         cv2.imwrite(f'{out_dir_merge}_raw/{str(i).zfill(4)}.png', img_)
+
+
+def predict_1ax(ori_imgs, model, out_dir):
+
+    os.makedirs(out_dir, exist_ok=True)
+
+    # XY
+    seped_xy_imgs = divide_imgs(ori_imgs)
+
+    predict(
+        X_test=seped_xy_imgs,
+        model=model,
+        out_dir=os.path.join(out_dir, "pred_xy"),
+    )
+
+    ori_image_shape = ori_imgs.shape
+
+    pred_xy_imgs, _ = load_Y_gray(os.path.join(out_dir, "pred_xy"))
+    merged_imgs_xy = merge_imgs(pred_xy_imgs, ori_image_shape)
+
+    mito_imgs_ave = merged_imgs_xy * 255
+
+    out_dir_merge = os.path.join(out_dir, 'merged_prediction')
+    os.makedirs(out_dir_merge, exist_ok=True)
+    os.makedirs(f"{out_dir_merge}_raw", exist_ok=True)
+
+    for i in range(mito_imgs_ave.shape[0]):
+        # threshed
+        img = np.where(
+            mito_imgs_ave[:, :, :, 0][i] >= 127,
+            1,
+            0
+        )
+        cv2.imwrite(f'{out_dir_merge}/{str(i).zfill(4)}.png', img)
+
+        # averaged
+        img_ = np.where(
+            mito_imgs_ave[:, :, :, 0][i] >= 127,
+            mito_imgs_ave[:, :, :, 0][i],
+            0
+        )
+        cv2.imwrite(f'{out_dir_merge}_raw/{str(i).zfill(4)}.png', img_)
