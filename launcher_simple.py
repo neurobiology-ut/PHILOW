@@ -255,7 +255,6 @@ class Trainer(QWidget):
         while True:
             df = pd.read_csv(os.path.join(self.modelpath, "train_log.csv"))
             df['epoch'] = df['epoch'] + 1
-            print(len(df.index))
             yield df
             time.sleep(30)
 
