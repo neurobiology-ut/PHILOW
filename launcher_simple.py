@@ -255,6 +255,7 @@ class Trainer(QWidget):
         while True:
             df = pd.read_csv(os.path.join(self.modelpath, "train_log.csv"))
             df['epoch'] = df['epoch'] + 1
+            print(len(df.index))
             yield df
             time.sleep(30)
 
@@ -296,7 +297,7 @@ class Predicter(QWidget):
         self.lbl4 = QLabel('output dir', self)
         self.build()
 
-        self.model_pred = None
+        self.model = None
         self.worker_pred = None
 
     def build(self):
@@ -356,7 +357,7 @@ class Predicter(QWidget):
         input_shape = (512, 512, 1)
         num_classes = 1
 
-        self.model_pred = get_nested_unet(input_shape=input_shape, num_classes=num_classes)
+        self.model = get_nested_unet(input_shape=input_shape, num_classes=num_classes)
         self.model.load_weights(os.path.join(self.modelpath, "model.hdf5"))
 
         self.btn5.setText('predicting')
