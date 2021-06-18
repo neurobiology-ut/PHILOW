@@ -1,17 +1,23 @@
 import os
 import shutil
+import time
 from pathlib import Path
+import io as IO
 
+import matplotlib.pyplot as plt
+import napari
+import numpy as np
+import pandas as pd
+from PIL import Image
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QSizePolicy, QLabel, QFileDialog,
                              QTabWidget, QLineEdit, QCheckBox)
-import numpy as np
+from napari.qt import thread_worker
 from skimage import io
-import napari
-import pandas as pd
 
 import utils
+from models import get_nested_unet
 from napari_view_simple import launch_viewers
-from predict import predict_3ax
+from predict import predict_3ax, predict_1ax
 from train import train_unet
 
 
@@ -123,6 +129,10 @@ class Trainer(QWidget):
         self.lbl3 = QLabel('model output dir', self)
         self.build()
 
+        self.model = None
+        self.worker = None
+        self.worker2 = None
+
     def build(self):
         vbox = QVBoxLayout()
         vbox.addWidget(combine_blocks(self.btn1, self.lbl))
@@ -163,31 +173,90 @@ class Trainer(QWidget):
         csv = pd.read_csv(str(csvs[-1]), index_col=0)
         return csv
 
+    def update_layer(self, df):
+        plt.figure(figsize=(10, 5))
+        plt.subplot(1, 2, 1)
+        plt.plot(list(df['epoch']), list(df['dice_coeff']), label='dice_coeff')
+        plt.xlim(0, 400)
+        plt.ylim(0, 1)
+        plt.legend()
+        plt.subplot(1, 2, 2)
+        plt.plot(list(df['epoch']), list(df['loss']), label='loss')
+        plt.legend()
+        plt.xlim(0, 400)
+        buf = IO.BytesIO()
+        plt.savefig(buf, format='png')
+        buf.seek(0)
+        im = Image.open(buf)
+        im = np.array(im)
+        buf.close()
+        try:
+            view_l.layers['result'].data = im
+        except KeyError:
+            view_l.add_image(
+                im, name='result'
+            )
+
     def trainer(self):
-        ori_imgs, ori_filenames = utils.load_X_gray(self.opath)
-        label_imgs, label_filenames = utils.load_Y_gray(self.labelpath, normalize=False)
-        train_csv = self.get_newest_csv()
-        train_ori_imgs, train_label_imgs = utils.select_train_data(
-            dataframe=train_csv,
-            ori_imgs=ori_imgs,
-            label_imgs=label_imgs,
-            ori_filenames=ori_filenames,
-        )
-        devided_train_ori_imgs = utils.divide_imgs(train_ori_imgs)
-        devided_train_label_imgs = utils.divide_imgs(train_label_imgs)
-        devided_train_label_imgs = np.where(
-            devided_train_label_imgs < 0,
-            0,
-            devided_train_label_imgs
-        )
+        if self.worker:
+            if self.worker.is_running:
+                pass
+            else:
+                self.worker.start()
+                self.btn4.setText('stop')
+        else:
+            ori_imgs, ori_filenames = utils.load_X_gray(self.opath)
+            label_imgs, label_filenames = utils.load_Y_gray(self.labelpath, normalize=False)
+            train_csv = self.get_newest_csv()
+            train_ori_imgs, train_label_imgs = utils.select_train_data(
+                dataframe=train_csv,
+                ori_imgs=ori_imgs,
+                label_imgs=label_imgs,
+                ori_filenames=ori_filenames,
+            )
+            devided_train_ori_imgs = utils.divide_imgs(train_ori_imgs)
+            devided_train_label_imgs = utils.divide_imgs(train_label_imgs)
+            devided_train_label_imgs = np.where(
+                devided_train_label_imgs < 0,
+                0,
+                devided_train_label_imgs
+            )
+
+            self.model = get_nested_unet(input_shape=(512, 512, 1), num_classes=1)
+
+            self.worker = self.train(devided_train_ori_imgs, devided_train_label_imgs, self.model)
+            self.worker.started.connect(lambda: print("worker is running..."))
+            self.worker.finished.connect(lambda: print("worker stopped"))
+            self.worker2 = self.yield_csv()
+            self.worker2.yielded.connect(self.update_layer)
+            self.worker2.start()
+
+        if self.worker.is_running:
+            self.model.stop_training = True
+            print("stop training requested")
+            self.btn4.setText('start training')
+            self.worker = None
+        else:
+            self.worker.start()
+            self.btn4.setText('stop')
+
+    @thread_worker
+    def train(self, devided_train_ori_imgs, devided_train_label_imgs, model):
         train_unet(
             X_train=devided_train_ori_imgs,
             Y_train=devided_train_label_imgs,
             csv_path=os.path.join(self.modelpath, "train_log.csv"),
             model_path=os.path.join(self.modelpath, "model.hdf5"),
-            input_shape=(512, 512, 1),
-            num_classes=1
+            model=model
         )
+
+    @thread_worker
+    def yield_csv(self):
+        while True:
+            df = pd.read_csv(os.path.join(self.modelpath, "train_log.csv"))
+            df['epoch'] = df['epoch'] + 1
+            yield df
+            time.sleep(30)
 
 
 class Predicter(QWidget):
@@ -211,6 +280,10 @@ class Predicter(QWidget):
         self.btn4.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.btn4.clicked.connect(self.show_dialog_outdir)
 
+        self.checkBox = QCheckBox("Check the box if you want to use TAP (Three-Axis-Prediction")
+        self.checkBox.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.checkBox.toggle()
+
         self.btn5 = QPushButton('predict', self)
         self.btn5.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.btn5.clicked.connect(self.predicter)
@@ -223,12 +296,16 @@ class Predicter(QWidget):
         self.lbl4 = QLabel('output dir', self)
         self.build()
 
+        self.model_pred = None
+        self.worker_pred = None
+
     def build(self):
         vbox = QVBoxLayout()
         vbox.addWidget(combine_blocks(self.btn1, self.lbl))
         vbox.addWidget(combine_blocks(self.btn2, self.lbl2))
         vbox.addWidget(combine_blocks(self.btn3, self.lbl3))
         vbox.addWidget(combine_blocks(self.btn4, self.lbl4))
+        vbox.addWidget(self.checkBox)
         vbox.addWidget(self.btn5)
         vbox.addWidget(self.btnb)
 
@@ -276,17 +353,54 @@ class Predicter(QWidget):
 
     def predicter(self):
         ori_imgs, ori_filenames = utils.load_X_gray(self.opath)
+        input_shape = (512, 512, 1)
+        num_classes = 1
 
-        predict_3ax(ori_imgs, os.path.join(self.modelpath, "model.hdf5"), self.outpath, input_shape=(512, 512, 1),
-                    num_classes=1)
+        self.model_pred = get_nested_unet(input_shape=input_shape, num_classes=num_classes)
+        self.model.load_weights(os.path.join(self.modelpath, "model.hdf5"))
 
+        self.btn5.setText('predicting')
+
+        if self.checkBox.isChecked() is True:
+            self.predict(ori_imgs)
+        else:
+            self.predict_single(ori_imgs)
+
+    def predict(self, ori_imgs):
+        try:
+            predict_3ax(ori_imgs, self.model, self.outpath)
+        except Exception as e:
+            print(e)
         if self.labelpath != "":
-            csv, csv_path = self.get_newest_csv()
-            if csv:
-                label_names = [node.filename for node in csv.itertuples() if node.train == "Checked"]
-                for ln in label_names:
-                    shutil.copy(os.path.join(self.labelpath, ln), os.path.join(self.outpath, 'merged_prediction'))
-                shutil.copy(str(csv_path), os.path.join(self.outpath, 'merged_prediction'))
+            try:
+                csv, csv_path = self.get_newest_csv()
+                if csv:
+                    label_names = [node.filename for node in csv.itertuples() if node.train == "Checked"]
+                    for ln in label_names:
+                        shutil.copy(os.path.join(self.labelpath, ln), os.path.join(self.outpath, 'merged_prediction'))
+                    shutil.copy(str(csv_path), os.path.join(self.outpath, 'merged_prediction'))
+            except Exception as e:
+                print(e)
+
+        self.btn5.setText('predict')
+
+    def predict_single(self, ori_imgs):
+        try:
+            predict_1ax(ori_imgs, self.model, self.outpath)
+        except Exception as e:
+            print(e)
+        if self.labelpath != "":
+            try:
+                csv, csv_path = self.get_newest_csv()
+                if csv:
+                    label_names = [node.filename for node in csv.itertuples() if node.train == "Checked"]
+                    for ln in label_names:
+                        shutil.copy(os.path.join(self.labelpath, ln), os.path.join(self.outpath, 'merged_prediction'))
+                    shutil.copy(str(csv_path), os.path.join(self.outpath, 'merged_prediction'))
+            except Exception as e:
+                print(e)
+
+        self.btn5.setText('predict')
 
 
 class Entrance(QWidget):
