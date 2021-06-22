@@ -19,7 +19,7 @@ Then install requirements.
 ```angular2
 git clone https://github.com/neurobiology-ut/PHILOW.git
 cd PHILOW
-pip install requirements.txt
+pip install -r requirements.txt
 ```
 
 
