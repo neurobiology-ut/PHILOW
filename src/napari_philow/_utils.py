@@ -198,11 +198,8 @@ def show_so_layer(args):
     object_slider.valueChanged[int].connect(lambda value=object_slider: calc_object_callback(so_layer, value,
                                                                                              labeled_sorted,
                                                                                              nums))
-
     lbl = QLabel('object size')
-
     slider_widget = combine_blocks(lbl, object_slider)
-
     viewer.window.add_dock_widget(slider_widget, name='object_size_slider', area='left')
 
     def calc_object_callback(t_layer, value, labeled_array, nums):
