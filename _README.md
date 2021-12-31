@@ -1,35 +1,27 @@
-# napari-PHILOW
-
-[![License](https://img.shields.io/pypi/l/napari-PHILOW.svg?color=green)](https://github.com/neurobiology-ut/PHILOW/raw/main/LICENSE)
-[![PyPI](https://img.shields.io/pypi/v/napari-PHILOW.svg?color=green)](https://pypi.org/project/napari-PHILOW)
-[![Python Version](https://img.shields.io/pypi/pyversions/napari-PHILOW.svg?color=green)](https://python.org)
-[![tests](https://github.com/neurobiology-ut/napari-PHILOW/workflows/tests/badge.svg)](https://github.com/neurobiology-ut/PHILOW/actions)
-[![codecov](https://codecov.io/gh/neurobiology-ut/napari-PHILOW/branch/main/graph/badge.svg)](https://codecov.io/gh/neurobiology-ut/PHILOW)
-[![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/napari-PHILOW)](https://napari-hub.org/plugins/napari-PHILOW)
-
 # PHILOW <br>
 ***P***ython-based platform for ***h***uman-***i***n-the-***lo***op (HITL)  ***w***orkflow (PHILOW) <br>
 
-PHILOW is an interactive deep learning-based platform for 3D datasets implemented on top of [napari](https://github.com/napari/napari)
+## Overview 
+PHILOW is an interactive deep learning-based platform for 3D datasets implemented on top of [napari](https://github.com/napari/napari) <br>
 
-----------------------------------
+Features:
 
-This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookiecutter-napari-plugin] template.
+&nbsp;&nbsp;&nbsp;&nbsp; (1) generation of the ground truth data sets with annotation assistance, visualization and data management tools<br>
+&nbsp;&nbsp;&nbsp;&nbsp; (2) model training and prediction <br>
+&nbsp;&nbsp;&nbsp;&nbsp; (3) correcting the results of deep learning-based segmentations <br>
+&nbsp;&nbsp;&nbsp;&nbsp; (4) iterate this process to get efficient and good results in a short time  <br>
+&nbsp;&nbsp;  in a single user-friendly application running on Python.
 
-<!--
-Don't miss the full getting started guide to set up your new package:
-https://github.com/napari/cookiecutter-napari-plugin#getting-started
-
-and review the napari docs for plugin developers:
-https://napari.org/plugins/stable/index.html
--->
 
 ## Installation
+Clone this repository first.   
+Then install requirements.
+```angular2
+git clone https://github.com/neurobiology-ut/PHILOW.git
+cd PHILOW
+pip install requirements.txt
+```
 
-You can install `napari-PHILOW` via [pip]:
-
-    pip install napari-PHILOW
-    
 
 ## Usage
 #### load dataset
@@ -127,20 +119,8 @@ If you don't have a GPU machine, you can use Google Colab to perform GPU-based t
 2) You can upload your own dataset to train and predict, or try it on demo data   
 
 
-## Contributing
-
-Contributions are very welcome. Tests can be run with [tox], please ensure
-the coverage at least stays the same before you submit a pull request.
-
-## License
-
-Distributed under the terms of the [BSD-3] license,
-"napari-PHILOW" is free and open source software
-
-## Issues
-
-If you encounter any problems, please [file an issue] along with a detailed description.
-
+ 
+ 　
 # Authors <br>
 
 Shogo Suga <br>
@@ -166,19 +146,3 @@ Shogo Suga, Koki Nakamura, Bruno M Humbel, Hiroki Kawai, Yusuke Hirabayashi, An 
 	journal = {bioRxiv}
 }
 ```
-
-[napari]: https://github.com/napari/napari
-[Cookiecutter]: https://github.com/audreyr/cookiecutter
-[@napari]: https://github.com/napari
-[MIT]: http://opensource.org/licenses/MIT
-[BSD-3]: http://opensource.org/licenses/BSD-3-Clause
-[GNU GPL v3.0]: http://www.gnu.org/licenses/gpl-3.0.txt
-[GNU LGPL v3.0]: http://www.gnu.org/licenses/lgpl-3.0.txt
-[Apache Software License 2.0]: http://www.apache.org/licenses/LICENSE-2.0
-[Mozilla Public License 2.0]: https://www.mozilla.org/media/MPL/2.0/index.txt
-[cookiecutter-napari-plugin]: https://github.com/napari/cookiecutter-napari-plugin
-
-[napari]: https://github.com/napari/napari
-[tox]: https://tox.readthedocs.io/en/latest/
-[pip]: https://pypi.org/project/pip/
-[PyPI]: https://pypi.org/
