@@ -16,7 +16,7 @@ from skimage import io
 
 import utils
 from models import get_nested_unet
-from napari_view_simple import launch_viewers
+from napari_view_simple import launch_viewers, launch_selector
 from predict import predict_3ax, predict_1ax
 from train import train_unet
 
@@ -403,6 +403,88 @@ class Predicter(QWidget):
         self.btn5.setText('predict')
 
 
+class Selector(QWidget):
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.master = parent
+        self.opath = ""
+        self.modpath = ""
+        self.select_path = ""
+        self.btn1 = QPushButton('open', self)
+        self.btn1.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.btn1.clicked.connect(self.show_dialog_o)
+        self.btn2 = QPushButton('open', self)
+        self.btn2.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.btn2.clicked.connect(self.show_dialog_mod)
+        self.btn3 = QPushButton('open', self)
+        self.btn3.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.btn3.clicked.connect(self.show_dialog_select)
+
+        self.btn4 = QPushButton('launch napari', self)
+        self.btn4.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.btn4.clicked.connect(self.launch_napari_selector)
+        self.btnb = QPushButton('back', self)
+        self.btnb.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.btnb.clicked.connect(self.back)
+        self.lbl = QLabel('original EM dir', self)
+        self.lbl2 = QLabel('original label dir', self)
+        self.lbl3 = QLabel('select dir', self)
+        self.build()
+
+    def build(self):
+        vbox = QVBoxLayout()
+        vbox.addWidget(combine_blocks(self.btn1, self.lbl))
+        vbox.addWidget(combine_blocks(self.btn2, self.lbl2))
+        vbox.addWidget(combine_blocks(self.btn3, self.lbl3))
+        vbox.addWidget(self.btn4)
+        vbox.addWidget(self.btnb)
+
+        self.setLayout(vbox)
+        self.show()
+
+    def show_dialog_o(self):
+        default_path = max(self.opath, self.modpath, self.select_path, os.path.expanduser('~'))
+        f_name = QFileDialog.getExistingDirectory(self, 'Open Directory', default_path)
+        if f_name:
+            self.opath = f_name
+            self.lbl.setText(self.opath)
+
+    def show_dialog_mod(self):
+        default_path = max(self.opath, self.modpath, self.select_path, os.path.expanduser('~'))
+        f_name = QFileDialog.getExistingDirectory(self, 'Open Directory', default_path)
+        if f_name:
+            self.modpath = f_name
+            self.lbl2.setText(self.modpath)
+
+    def show_dialog_select(self):
+        default_path = max(self.modpath, self.select_path, os.path.expanduser('~'))
+        f_name = QFileDialog.getExistingDirectory(self, 'Open Directory', default_path)
+        if f_name:
+            self.select_path = f_name
+            self.lbl3.setText(self.select_path)
+
+    def back(self):
+        self.master.setCurrentIndex(0)
+
+    def launch_napari_selector(self):
+        images = utils.load_images(self.opath)
+        labels = utils.load_saved_masks(self.modpath)
+        if not os.path.exists(self.select_path):
+            selects = np.zeros_like(images.compute())
+            os.makedirs(self.select_path, exist_ok=True)
+            filenames = [fn.name for fn in sorted(list(Path(self.opath).glob('./*png')))]
+            for i in range(len(selects)):
+                io.imsave(os.path.join(self.select_path, str(i).zfill(4) + '.png'), selects[i])
+        else:
+            selects = utils.load_saved_masks(self.select_path)
+
+        view1 = launch_selector(images, labels, selects, self.modpath, self.select_path)
+        global view_l
+        view_l.close()
+        return view1
+
+
 class Entrance(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
@@ -416,6 +498,9 @@ class Entrance(QWidget):
         self.btn3 = QPushButton('Predicter', self)
         self.btn3.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.btn3.clicked.connect(self.move_to_predicter)
+        self.btn4 = QPushButton('Selector', self)
+        self.btn4.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.btn4.clicked.connect(self.move_to_selector)
         self.build()
 
     def build(self):
@@ -423,6 +508,7 @@ class Entrance(QWidget):
         vbox.addWidget(self.btn1)
         vbox.addWidget(self.btn2)
         vbox.addWidget(self.btn3)
+        vbox.addWidget(self.btn4)
 
         self.setLayout(vbox)
         self.show()
@@ -436,6 +522,9 @@ class Entrance(QWidget):
     def move_to_predicter(self):
         self.master.setCurrentIndex(3)
 
+    def move_to_selector(self):
+        self.master.setCurrentIndex(4)
+
 
 class App(QTabWidget):
     def __init__(self):
@@ -445,12 +534,14 @@ class App(QTabWidget):
         self.tab2 = Loader(self)
         self.tab3 = Trainer(self)
         self.tab4 = Predicter(self)
+        self.tab5 = Selector(self)
 
         # add to tab page
         self.addTab(self.tab1, "Entrance")
         self.addTab(self.tab2, "Loader")
         self.addTab(self.tab3, "Trainer")
         self.addTab(self.tab4, "Predicter")
+        self.addTab(self.tab5, "Selector")
 
         self.setStyleSheet("QTabWidget::pane { border: 0; }")
         self.tabBar().hide()

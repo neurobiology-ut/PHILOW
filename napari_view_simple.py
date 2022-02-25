@@ -12,6 +12,7 @@ from pathlib import Path
 
 from napari._qt.qthreading import thread_worker
 from scipy import ndimage
+import cc3d
 
 import utils
 from dock import Datamanager
@@ -177,3 +178,85 @@ def launch_viewers(original, base, raw, r_path, model_type, checkbox):
         , -yohaku_minus[2]:100 - yohaku_plus[2]] = crop_temp
         return cropped_img
 
+
+def launch_selector(original, label, select, mod_path, select_path):
+
+    global view1
+    global layer1
+    global layer2
+    global images_original
+    global base_label
+    global only_label
+
+    images_original = original
+    base_label = label
+    only_label = select
+
+    # remove duplicate area from base_label 
+    base_label = np.where(only_label>0, 0, base_label)
+
+    try:
+        del view1
+        del layer1
+        del layer2
+    except NameError:
+        pass
+    view1 = napari.view_image(images_original, contrast_limits=[0, 255])
+    view1.add_labels(base_label, name='base', color={1:'red', 2:'blue', 3:'green'})
+    view1.add_labels(only_label, name="selected_objects", color={1:'blue', 2:'green', 3:'red'})
+
+    # culc label
+    labels_imgs = cc3d.connected_components((select == 1).astype(int), connectivity = 6)
+    layer1 = view1.layers[1]
+    layer2 = view1.layers[2]
+
+    def select_target():
+        global base_label
+        global only_label
+    
+        @layer1.bind_key('q', overwrite = True)
+        def select(layer):
+            global base_label
+            global only_label
+            q_point = np.round(layer1.coordinates).astype(int)
+            print("select_label : ", labels_imgs[q_point[0], q_point[1], q_point[2]], "select_point : ", q_point)
+            if labels_imgs[q_point[0], q_point[1], q_point[2]]:
+                target_label = labels_imgs[q_point[0], q_point[1], q_point[2]]
+                only_label = np.where(labels_imgs == target_label, 1, only_label)
+                base_label = np.where(labels_imgs == target_label, 0, base_label)
+                view1.layers[1].data = base_label
+                view1.layers[2].data = only_label
+                print('Selected!')
+            return True
+
+    @layer1.mouse_drag_callbacks.append
+    def main(layer, event):
+        select_target()
+
+    def deselect_target():
+        global base_label
+        global only_label
+
+        @layer2.bind_key('w', overwrite = True)
+        def deselect(layer):
+            global base_label
+            global only_label
+            w_point = np.round(layer2.coordinates).astype(int)
+            print("select_label : ", labels_imgs[w_point[0], w_point[1], w_point[2]], "select_point : ", w_point)
+            if labels_imgs[w_point[0], w_point[1], w_point[2]]:
+                target_label = labels_imgs[w_point[0], w_point[1], w_point[2]]
+                base_label = np.where(labels_imgs == target_label, 1, base_label)
+                only_label = np.where(labels_imgs == target_label, 0, only_label)
+                view1.layers[1].data = base_label
+                view1.layers[2].data = only_label
+                print('Deselect!')
+            return True
+
+    @layer2.mouse_drag_callbacks.append
+    def main(layer, event):
+        deselect_target()
+
+    @magicgui(call_button="save")
+    def saver():
+        print("The directory is:", mod_path)
+        return utils.save_masks(layer1.data, mod_path), utils.save_masks(layer2.data, select_path)

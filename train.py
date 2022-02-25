@@ -1,5 +1,5 @@
 from tensorflow.keras.callbacks import CSVLogger
-from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 from models import get_nested_unet
 
