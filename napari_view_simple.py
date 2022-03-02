@@ -206,7 +206,7 @@ def launch_selector(original, label, select, mod_path, select_path):
     view1.add_labels(only_label, name="selected_objects", color={1:'blue', 2:'green', 3:'red'})
 
     # culc label
-    labels_imgs = cc3d.connected_components((select == 1).astype(int), connectivity = 6)
+    labels_imgs = cc3d.connected_components((label == 1).astype(int), connectivity = 6)
     layer1 = view1.layers[1]
     layer2 = view1.layers[2]
 
@@ -249,7 +249,7 @@ def launch_selector(original, label, select, mod_path, select_path):
                 only_label = np.where(labels_imgs == target_label, 0, only_label)
                 view1.layers[1].data = base_label
                 view1.layers[2].data = only_label
-                print('Deselect!')
+                print('Deselected!')
             return True
 
     @layer2.mouse_drag_callbacks.append
