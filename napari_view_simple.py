@@ -256,7 +256,28 @@ def launch_selector(original, label, select, mod_path, select_path):
     def main(layer, event):
         deselect_target()
 
+    @magicgui(dirname={"mode": "d"})
+    def mod_dirpicker(dirname=Path(mod_path)):
+        """Take a filename and do something with it."""
+        print("The filename is:", dirname)
+        return dirname
+
+    gui1 = mod_dirpicker.Gui(show=True)
+    view1.window.add_dock_widget(gui1, area='bottom')
+
+    @magicgui(dirname={"mode": "d"})
+    def select_dirpicker(dirname=Path(select_path)):
+        """Take a filename and do something with it."""
+        print("The filename is:", dirname)
+        return dirname
+
+    gui3 = select_dirpicker.Gui(show=True)
+    view1.window.add_dock_widget(gui3, area='bottom')
+
     @magicgui(call_button="save")
     def saver():
-        print("The directory is:", mod_path)
+        print("The directory is:", select_path)
         return utils.save_masks(layer1.data, mod_path), utils.save_masks(layer2.data, select_path)
+
+    gui4 = saver.Gui(show=True)
+    view1.window.add_dock_widget(gui4, area='bottom')
