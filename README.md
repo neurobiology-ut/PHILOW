@@ -36,6 +36,7 @@ You can install `napari-PHILOW` via [pip]:
 ```angular2
 python launcher_simple.py
 ```
+
 1) Select Loader
 
 2) Select original dir : all slices must be in separate PNG and must be sequentially numbered (e.g. 000.png, 001.png ...)
