@@ -55,7 +55,6 @@ class Trainer(QWidget):
         vbox.addWidget(combine_blocks(self.btn2, self.lbl2))
         vbox.addWidget(combine_blocks(self.btn3, self.lbl3))
         vbox.addWidget(self.btn4)
-        vbox.addWidget(self.btnb)
 
         self.setLayout(vbox)
         self.show()
