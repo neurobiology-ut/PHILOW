@@ -67,7 +67,8 @@ class Datamanager(QWidget):
         """
         csvs = sorted(list(Path(label_dir).glob(f'{model_type}*.csv')))
         if len(csvs) == 0:
-            df, train_data_dir, csv_path = self.create(label_dir, model_type)
+            #df, train_data_dir, csv_path = self.create(label_dir, model_type)
+            df, csv_path = self.create(label_dir, model_type)
         else:
             csv_path = str(csvs[-1])
             df = pd.read_csv(csv_path, index_col=0)

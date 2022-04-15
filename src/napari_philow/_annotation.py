@@ -37,13 +37,13 @@ class AnnotationMode(QWidget):
         self.checkBox = QCheckBox("create new dataset?")
         self.checkBox.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
-        self.btn4 = QPushButton('start tracing', self)
+        self.btn4 = QPushButton('Start tracing', self)
         self.btn4.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.btn4.clicked.connect(self.launch)
         self.lbl = QLabel('original dir', self)
         self.lbl2 = QLabel('mask dir', self)
         self.lbl4 = QLabel('model type (do not use word "train")', self)
-        self.dock = self.build()
+        self.build()
 
     def build(self):
         vbox = QVBoxLayout()
@@ -114,6 +114,7 @@ class AnnotationMode(QWidget):
         @thread_worker(connect={"returned": show_so_layer})
         def create_label(viewer):
             labeled_sorted, nums = label_and_sort(base_label)
+            print(nums)
             labeled_c = label_ct(labeled_sorted, nums, 10)
             return labeled_c, labeled_sorted, nums, viewer
 
