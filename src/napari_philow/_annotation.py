@@ -117,8 +117,8 @@ class AnnotationMode(QWidget):
             print(nums)
             labeled_c = label_ct(labeled_sorted, nums, 10)
             return labeled_c, labeled_sorted, nums, viewer
-
-        create_label(self._viewer)
+        if len(np.unique(base_label)) > 1:
+            create_label(self._viewer)
 
         layer = self._viewer.layers[0]
         layer1 = self._viewer.layers[1]
@@ -135,7 +135,7 @@ class AnnotationMode(QWidget):
         @magicgui(call_button="save")
         def saver():
             # out_dir = gui.dirname
-            out_dir = dirpicker
+            out_dir = dirpicker.dirname.value
             print("The directory is:", out_dir)
             return save_masks(layer1.data, out_dir)
 
