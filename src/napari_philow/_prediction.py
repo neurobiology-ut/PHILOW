@@ -9,7 +9,7 @@ from qtpy.QtWidgets import (QWidget, QVBoxLayout, QPushButton, QSizePolicy, QLab
 
 import utils
 from models import get_nested_unet
-from predict import predict_3ax, predict_1ax
+from src.napari_philow._predict import predict_3ax, predict_1ax
 from src.napari_philow._utils import combine_blocks
 
 
@@ -100,6 +100,7 @@ class Predicter(QWidget):
 
     def predicter(self):
         ori_imgs, ori_filenames = utils.load_X_gray(self.opath)
+        print(ori_imgs.shape)
         input_shape = (512, 512, 1)
         num_classes = 1
 

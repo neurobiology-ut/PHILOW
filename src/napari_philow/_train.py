@@ -10,13 +10,11 @@ from PIL import Image
 from napari.qt import thread_worker
 from napari_tools_menu import register_dock_widget
 from qtpy.QtWidgets import QWidget, QPushButton, QSizePolicy, QLabel, QVBoxLayout, QFileDialog
-from tensorflow.python.keras.callbacks import CSVLogger
-from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.callbacks import CSVLogger, ModelCheckpoint
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
-import utils
 from models import get_nested_unet
-from src.napari_philow._utils import combine_blocks
-from train import train_unet
+from src.napari_philow._utils import combine_blocks, load_X_gray, load_Y_gray, select_train_data, divide_imgs
 
 
 @register_dock_widget(menu="PHILOW > Train mode")
@@ -98,6 +96,7 @@ class Trainer(QWidget):
         plt.xlim(0, 400)
         buf = IO.BytesIO()
         plt.savefig(buf, format='png')
+        plt.close()
         buf.seek(0)
         im = Image.open(buf)
         im = np.array(im)
@@ -117,17 +116,17 @@ class Trainer(QWidget):
                 self.worker.start()
                 self.btn4.setText('stop')
         else:
-            ori_imgs, ori_filenames = utils.load_X_gray(self.opath)
-            label_imgs, label_filenames = utils.load_Y_gray(self.labelpath, normalize=False)
+            ori_imgs, ori_filenames = load_X_gray(self.opath)
+            label_imgs, label_filenames = load_Y_gray(self.labelpath, normalize=False)
             train_csv = self.get_newest_csv()
-            train_ori_imgs, train_label_imgs = utils.select_train_data(
+            train_ori_imgs, train_label_imgs = select_train_data(
                 dataframe=train_csv,
                 ori_imgs=ori_imgs,
                 label_imgs=label_imgs,
                 ori_filenames=ori_filenames,
             )
-            devided_train_ori_imgs = utils.divide_imgs(train_ori_imgs)
-            devided_train_label_imgs = utils.divide_imgs(train_label_imgs)
+            devided_train_ori_imgs = divide_imgs(train_ori_imgs)
+            devided_train_label_imgs = divide_imgs(train_label_imgs)
             devided_train_label_imgs = np.where(
                 devided_train_label_imgs < 0,
                 0,
@@ -165,9 +164,12 @@ class Trainer(QWidget):
     @thread_worker
     def yield_csv(self):
         while True:
-            df = pd.read_csv(os.path.join(self.modelpath, "train_log.csv"))
-            df['epoch'] = df['epoch'] + 1
-            yield df
+            try:
+                df = pd.read_csv(os.path.join(self.modelpath, "train_log.csv"))
+                df['epoch'] = df['epoch'] + 1
+                yield df
+            except Exception as e:
+                print(e)
             time.sleep(30)
 
 
@@ -202,5 +204,7 @@ def train_unet(X_train, Y_train, csv_path, model_path, model):
 
     callbacks = []
     callbacks.append(CSVLogger(csv_path))
-    history = model.fit(train_generator, steps_per_epoch=32, epochs=NUM_EPOCH, verbose=1, callbacks=callbacks)
+    callbacks.append(ModelCheckpoint(model_path))
+    history = model.fit(train_generator, steps_per_epoch=np.ceil(len(X_train / BATCH_SIZE)), epochs=NUM_EPOCH,
+                        verbose=1, callbacks=callbacks)
     model.save_weights(model_path)

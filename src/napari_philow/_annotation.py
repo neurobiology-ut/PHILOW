@@ -77,8 +77,10 @@ class AnnotationMode(QWidget):
             self.modpath = os.path.join(os.path.dirname(self.opath), self.textbox.text())
             os.makedirs(self.modpath, exist_ok=True)
             filenames = [fn.name for fn in sorted(list(Path(self.opath).glob('./*png')))]
-            for i in range(len(labels)):
-                io.imsave(os.path.join(self.modpath, str(i).zfill(4) + '.png'), labels[i])
+            #for i in range(len(labels)):
+            #    io.imsave(os.path.join(self.modpath, str(i).zfill(4) + '.png'), labels[i])
+            for i, filename in enumerate(filenames):
+                io.imsave(os.path.join(self.modpath, filename), labels[i])
         else:
             labels = load_saved_masks(self.modpath)
         try:

@@ -2,6 +2,7 @@ import copy
 import os
 from pathlib import Path
 
+import cv2
 import dask_image.imread
 from qtpy.QtWidgets import QWidget, QHBoxLayout, QSlider, QLabel
 from qtpy.QtCore import Qt
@@ -10,6 +11,10 @@ from scipy import ndimage
 from skimage import io
 from skimage.filters import gaussian
 import pandas as pd
+from tqdm import tqdm
+
+import tensorflow.keras.backend as K
+from tensorflow.keras.losses import binary_crossentropy
 
 
 def combine_blocks(block1, block2):
@@ -149,7 +154,7 @@ def label_and_sort(base_label):
     nums = np.sort(nums[1:])
     labeled_sorted = np.zeros_like(labeled)
     for i, idx in enumerate(idx_list):
-        labeled_sorted = np.where(labeled == mks[1:][idx], i+1, labeled_sorted)
+        labeled_sorted = np.where(labeled == mks[1:][idx], i + 1, labeled_sorted)
     return labeled_sorted, nums
 
 
@@ -204,3 +209,321 @@ def show_so_layer(args):
 
     def calc_object_callback(t_layer, value, labeled_array, nums):
         t_layer.data = label_ct(labeled_array, nums, value)
+
+
+def load_X_gray(folder_path):
+    image_files = []
+    for file in os.listdir(folder_path):
+        base, ext = os.path.splitext(file)
+        if ext == '.png':
+            image_files.append(file)
+        else:
+            pass
+
+    image_files.sort()
+
+    img = cv2.imread(folder_path + os.sep + image_files[0], cv2.IMREAD_GRAYSCALE)
+
+    images = np.zeros((len(image_files), img.shape[0], img.shape[1], 1), np.float32)
+    for i, image_file in tqdm(enumerate(image_files)):
+        image = cv2.imread(folder_path + os.sep + image_file, cv2.IMREAD_GRAYSCALE)
+        image = image[:, :, np.newaxis]
+        images[i] = normalize_x(image)
+
+    print(images.shape)
+
+    return images, image_files
+
+
+def load_Y_gray(folder_path, thresh=None, normalize=False):
+    image_files = []
+    for file in os.listdir(folder_path):
+        base, ext = os.path.splitext(file)
+        if ext == '.png':
+            image_files.append(file)
+        else:
+            pass
+
+    image_files.sort()
+
+    img = cv2.imread(folder_path + os.sep + image_files[0], cv2.IMREAD_GRAYSCALE)
+
+    images = np.zeros((len(image_files), img.shape[0], img.shape[1], 1), np.float32)
+
+    for i, image_file in tqdm(enumerate(image_files)):
+        image = cv2.imread(folder_path + os.sep + image_file, cv2.IMREAD_GRAYSCALE)
+        if thresh:
+            ret, image = cv2.threshold(image, thresh, 255, cv2.THRESH_BINARY)
+        image = image[:, :, np.newaxis]
+        if normalize:
+            images[i] = normalize_y(image)
+        else:
+            images[i] = image
+
+    print(images.shape)
+
+    return images, image_files
+
+
+def select_train_data(dataframe, ori_imgs, label_imgs, ori_filenames):
+    train_img_names = list()
+    for node in dataframe.itertuples():
+        if node.train == "Checked":
+            train_img_names.append(node.filename)
+    train_ori_imgs = list()
+    train_label_imgs = list()
+    for ori_img, label_img, train_filename in zip(ori_imgs, label_imgs, ori_filenames):
+        if train_filename in train_img_names:
+            train_ori_imgs.append(ori_img)
+            train_label_imgs.append(label_img)
+    print(ori_filenames)
+    return np.array(train_ori_imgs), np.array(train_label_imgs)
+
+
+def dice_coeff(y_true, y_pred):
+    smooth = 1.
+    y_true_f = K.flatten(y_true)
+    y_pred_f = K.flatten(y_pred)
+    intersection = K.sum(y_true_f * y_pred_f)
+    score = (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
+    return score
+
+
+def dice_loss(y_true, y_pred):
+    loss = 1 - dice_coeff(y_true, y_pred)
+    return loss
+
+
+def bce_dice_loss(y_true, y_pred):
+    loss = binary_crossentropy(y_true, y_pred) + dice_loss(y_true, y_pred)
+    return loss
+
+
+def divide_imgs(images):
+    H = -(-images.shape[1] // 412)
+    W = -(-images.shape[2] // 412)
+
+    diveded_imgs = np.zeros((images.shape[0] * H * W, 512, 512, 1), np.float32)
+    print(H, W)
+
+    for z in range(images.shape[0]):
+        image = images[z]
+        for h in range(H):
+            for w in range(W):
+                cropped_img = np.zeros((512, 512, 1), np.float32)
+                cropped_img -= 1
+
+                if images.shape[1] < 412:
+                    h = -1
+                if images.shape[2] < 412:
+                    w = -1
+
+                if h == -1:
+                    if w == -1:
+                        cropped_img[50:images.shape[1] + 50, 50:images.shape[2] + 50, 0] = image[0:images.shape[1],
+                                                                                           0:images.shape[2], 0]
+                    elif w == 0:
+                        cropped_img[50:images.shape[1] + 50, 50:512, 0] = image[0:images.shape[1], 0:462, 0]
+                    elif w == W - 1:
+                        cropped_img[50:images.shape[1] + 50, 0:images.shape[2] - 412 * W - 50, 0] = image[
+                                                                                                    0:images.shape[1],
+                                                                                                    w * 412 - 50:
+                                                                                                    images.shape[2], 0]
+                    else:
+                        cropped_img[50:images.shape[1] + 50, :, 0] = image[0:images.shape[1],
+                                                                     w * 412 - 50:(w + 1) * 412 + 50, 0]
+                elif h == 0:
+                    if w == -1:
+                        cropped_img[50:512, 50:images.shape[2] + 50, 0] = image[0:462, 0:images.shape[2], 0]
+                    elif w == 0:
+                        cropped_img[50:512, 50:512, 0] = image[0:462, 0:462, 0]
+                    elif w == W - 1:
+                        cropped_img[50:512, 0:images.shape[2] - 412 * W - 50, 0] = image[0:462,
+                                                                                   w * 412 - 50:images.shape[2], 0]
+                    else:
+                        # cropped_img[50:512, :, 0] = image[0:462, w*412-50:(w+1)*412+50, 0]
+                        try:
+                            cropped_img[50:512, :, 0] = image[0:462, w * 412 - 50:(w + 1) * 412 + 50, 0]
+                        except:
+                            cropped_img[50:512, 0:images.shape[2] - 412 * (W - 1) - 50, 0] = image[0:462, w * 412 - 50:(
+                                                                                                                               w + 1) * 412 + 50,
+                                                                                             0]
+                elif h == H - 1:
+                    if w == -1:
+                        cropped_img[0:images.shape[1] - 412 * H - 50, 50:images.shape[2] + 50, 0] = image[h * 412 - 50:
+                                                                                                          images.shape[
+                                                                                                              1],
+                                                                                                    0:images.shape[2],
+                                                                                                    0]
+                    elif w == 0:
+                        cropped_img[0:images.shape[1] - 412 * H - 50, 50:512, 0] = image[h * 412 - 50:images.shape[1],
+                                                                                   0:462, 0]
+                    elif w == W - 1:
+                        cropped_img[0:images.shape[1] - 412 * H - 50, 0:images.shape[2] - 412 * W - 50, 0] = image[
+                                                                                                             h * 412 - 50:
+                                                                                                             images.shape[
+                                                                                                                 1],
+                                                                                                             w * 412 - 50:
+                                                                                                             images.shape[
+                                                                                                                 2], 0]
+                    else:
+                        try:
+                            cropped_img[0:images.shape[1] - 412 * H - 50, :, 0] = image[h * 412 - 50:images.shape[1],
+                                                                                  w * 412 - 50:(w + 1) * 412 + 50, 0]
+                        except:
+                            cropped_img[0:images.shape[1] - 412 * H - 50, 0:images.shape[2] - 412 * (W - 1) - 50,
+                            0] = image[h * 412 - 50:images.shape[1], w * 412 - 50:(w + 1) * 412 + 50, 0]
+                else:
+                    if w == -1:
+                        cropped_img[:, 50:images.shape[2] + 50, 0] = image[h * 412 - 50:(h + 1) * 412 + 50,
+                                                                     0:images.shape[2], 0]
+                    elif w == 0:
+                        # cropped_img[:, 50:512, 0] = image[h*412-50:(h+1)*412+50, 0:462, 0]
+                        try:
+                            cropped_img[:, 50:512, 0] = image[h * 412 - 50:(h + 1) * 412 + 50, 0:462, 0]
+                        except:
+                            cropped_img[0:images.shape[1] - 412 * H - 50 + 412, 50:512, 0] = image[h * 412 - 50:(
+                                                                                                                        h + 1) * 412 + 50,
+                                                                                             0:462, 0]
+                    elif w == W - 1:
+                        # cropped_img[:, 0:images.shape[2]-412*W-50, 0] = image[h*412-50:(h+1)*412+50, w*412-50:images.shape[2], 0]
+                        try:
+                            cropped_img[:, 0:images.shape[2] - 412 * W - 50, 0] = image[h * 412 - 50:(h + 1) * 412 + 50,
+                                                                                  w * 412 - 50:images.shape[2], 0]
+                        except:
+                            cropped_img[0:images.shape[1] - 412 * H - 50 + 412, 0:images.shape[2] - 412 * W - 50,
+                            0] = image[h * 412 - 50:(h + 1) * 412 + 50, w * 412 - 50:images.shape[2], 0]
+                    else:
+                        # cropped_img[:, :, 0] = image[h*412-50:(h+1)*412+50, w*412-50:(w+1)*412+50, 0]
+                        try:
+                            cropped_img[:, :, 0] = image[h * 412 - 50:(h + 1) * 412 + 50,
+                                                   w * 412 - 50:(w + 1) * 412 + 50, 0]
+                        except:
+                            try:
+                                cropped_img[:, 0:images.shape[2] - 412 * (W - 1) - 50, 0] = image[h * 412 - 50:(
+                                                                                                                       h + 1) * 412 + 50,
+                                                                                            w * 412 - 50:(
+                                                                                                                 w + 1) * 412 + 50,
+                                                                                            0]
+                            except:
+                                cropped_img[0:images.shape[1] - 412 * (H - 1) - 50, :, 0] = image[h * 412 - 50:(
+                                                                                                                       h + 1) * 412 + 50,
+                                                                                            w * 412 - 50:(
+                                                                                                                 w + 1) * 412 + 50,
+                                                                                            0]
+                h = max(0, h)
+                w = max(0, w)
+                diveded_imgs[z * H * W + w * H + h] = cropped_img
+                # print(z*H*W+ w*H+h)
+
+    return diveded_imgs
+
+
+def merge_imgs(imgs, original_image_shape):
+    merged_imgs = np.zeros((original_image_shape[0], original_image_shape[1], original_image_shape[2], 1), np.float32)
+    H = -(-original_image_shape[1] // 412)
+    W = -(-original_image_shape[2] // 412)
+
+    for z in range(original_image_shape[0]):
+        for h in range(H):
+            for w in range(W):
+
+                if original_image_shape[1] < 412:
+                    h = -1
+                if original_image_shape[2] < 412:
+                    w = -1
+
+                # print(z*H*W+ max(w, 0)*H+max(h, 0))
+                if h == -1:
+                    if w == -1:
+                        merged_imgs[z, 0:original_image_shape[1], 0:original_image_shape[2], 0] = imgs[
+                                                                                                      z * H * W + 0 * H + 0][
+                                                                                                  50:
+                                                                                                  original_image_shape[
+                                                                                                      1] + 50, 50:
+                                                                                                               original_image_shape[
+                                                                                                                   2] + 50,
+                                                                                                  0]
+                    elif w == 0:
+                        merged_imgs[z, 0:original_image_shape[1], 0:412, 0] = imgs[z * H * W + w * H + 0][
+                                                                              50:original_image_shape[1] + 50, 50:462,
+                                                                              0]
+                    elif w == W - 1:
+                        merged_imgs[z, 0:original_image_shape[1], w * 412:original_image_shape[2], 0] = imgs[
+                                                                                                            z * H * W + w * H + 0][
+                                                                                                        50:
+                                                                                                        original_image_shape[
+                                                                                                            1] + 50, 50:
+                                                                                                                     original_image_shape[
+                                                                                                                         2] - 412 * W - 50,
+                                                                                                        0]
+                    else:
+                        merged_imgs[z, 0:original_image_shape[1], w * 412:(w + 1) * 412, 0] = imgs[
+                                                                                                  z * H * W + w * H + 0][
+                                                                                              50:original_image_shape[
+                                                                                                     1] + 50, 50:462, 0]
+                elif h == 0:
+                    if w == -1:
+                        merged_imgs[z, 0:412, 0:original_image_shape[2], 0] = imgs[z * H * W + 0 * H + h][50:462,
+                                                                              50:original_image_shape[2] + 50, 0]
+                    elif w == 0:
+                        merged_imgs[z, 0:412, 0:412, 0] = imgs[z * H * W + w * H + h][50:462, 50:462, 0]
+                    elif w == W - 1:
+                        merged_imgs[z, 0:412, w * 412:original_image_shape[2], 0] = imgs[z * H * W + w * H + h][50:462,
+                                                                                    50:original_image_shape[
+                                                                                           2] - 412 * W - 50, 0]
+                    else:
+                        merged_imgs[z, 0:412, w * 412:(w + 1) * 412, 0] = imgs[z * H * W + w * H + h][50:462, 50:462, 0]
+                elif h == H - 1:
+                    if w == -1:
+                        merged_imgs[z, h * 412:original_image_shape[1], 0:original_image_shape[2], 0] = imgs[
+                                                                                                            z * H * W + 0 * H + h][
+                                                                                                        50:
+                                                                                                        original_image_shape[
+                                                                                                            1] - 412 * H - 50,
+                                                                                                        50:
+                                                                                                        original_image_shape[
+                                                                                                            2] + 50, 0]
+                    elif w == 0:
+                        merged_imgs[z, h * 412:original_image_shape[1], 0:412, 0] = imgs[z * H * W + w * H + h][
+                                                                                    50:original_image_shape[
+                                                                                           1] - 412 * H - 50, 50:462, 0]
+                    elif w == W - 1:
+                        merged_imgs[z, h * 412:original_image_shape[1], w * 412:original_image_shape[2], 0] = imgs[
+                                                                                                                  z * H * W + w * H + h][
+                                                                                                              50:
+                                                                                                              original_image_shape[
+                                                                                                                  1] - 412 * H - 50,
+                                                                                                              50:
+                                                                                                              original_image_shape[
+                                                                                                                  2] - 412 * W - 50,
+                                                                                                              0]
+                    else:
+                        merged_imgs[z, h * 412:original_image_shape[1], w * 412:(w + 1) * 412, 0] = imgs[
+                                                                                                        z * H * W + w * H + h][
+                                                                                                    50:
+                                                                                                    original_image_shape[
+                                                                                                        1] - 412 * H - 50,
+                                                                                                    50:462, 0]
+                else:
+                    if w == -1:
+                        merged_imgs[z, h * 412:(h + 1) * 412, 0:original_image_shape[2], 0] = imgs[
+                                                                                                  z * H * W + 0 * H + h][
+                                                                                              50:462,
+                                                                                              50:original_image_shape[
+                                                                                                     2] + 50, 0]
+                    elif w == 0:
+                        merged_imgs[z, h * 412:(h + 1) * 412, 0:412, 0] = imgs[z * H * W + w * H + h][50:462, 50:462, 0]
+                    elif w == W - 1:
+                        merged_imgs[z, h * 412:(h + 1) * 412, w * 412:original_image_shape[2], 0] = imgs[
+                                                                                                        z * H * W + w * H + h][
+                                                                                                    50:462, 50:
+                                                                                                            original_image_shape[
+                                                                                                                2] - 412 * W - 50,
+                                                                                                    0]
+                    else:
+                        merged_imgs[z, h * 412:(h + 1) * 412, w * 412:(w + 1) * 412, 0] = imgs[z * H * W + w * H + h][
+                                                                                          50:462, 50:462, 0]
+
+    print(merged_imgs.shape)
+    return merged_imgs
