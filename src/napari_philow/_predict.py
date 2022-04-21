@@ -27,7 +27,7 @@ def predict(X_test, model, out_dir):
             cv2.imwrite(os.path.join(out_dir, str(i).zfill(6) + '.png'), denormalize_y(y))
 
 
-def predict_3ax(ori_imgs, model, out_dir):
+def predict_3ax(ori_imgs, model, out_dir, filenames):
 
     os.makedirs(out_dir, exist_ok=True)
 
@@ -96,7 +96,7 @@ def predict_3ax(ori_imgs, model, out_dir):
         cv2.imwrite(f'{out_dir_merge}_raw/{str(i).zfill(4)}.png', img_)
 
 
-def predict_1ax(ori_imgs, model, out_dir):
+def predict_1ax(ori_imgs, model, out_dir, filenames):
 
     os.makedirs(out_dir, exist_ok=True)
 
@@ -128,7 +128,8 @@ def predict_1ax(ori_imgs, model, out_dir):
             1,
             0
         )
-        cv2.imwrite(f'{out_dir_merge}/{str(i).zfill(4)}.png', img)
+        # cv2.imwrite(f'{out_dir_merge}/{str(i).zfill(4)}.png', img)
+        cv2.imwrite(f'{out_dir_merge}/{filenames[i]}', img)
 
         # averaged
         img_ = np.where(
@@ -136,4 +137,5 @@ def predict_1ax(ori_imgs, model, out_dir):
             mito_imgs_ave[:, :, :, 0][i],
             0
         )
-        cv2.imwrite(f'{out_dir_merge}_raw/{str(i).zfill(4)}.png', img_)
+        # cv2.imwrite(f'{out_dir_merge}_raw/{str(i).zfill(4)}.png', img_)
+        cv2.imwrite(f'{out_dir_merge}/{filenames[i]}', img_)

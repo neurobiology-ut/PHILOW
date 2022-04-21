@@ -109,13 +109,13 @@ class Predicter(QWidget):
         self.btn5.setText('predicting')
 
         if self.checkBox.isChecked() is True:
-            self.predict(ori_imgs)
+            self.predict(ori_imgs, ori_filenames)
         else:
-            self.predict_single(ori_imgs)
+            self.predict_single(ori_imgs, ori_filenames)
 
-    def predict(self, ori_imgs):
+    def predict(self, ori_imgs, filenames):
         try:
-            predict_3ax(ori_imgs, self.model, self.outpath)
+            predict_3ax(ori_imgs, self.model, self.outpath, filenames)
         except Exception as e:
             print(e)
         if self.labelpath != "":
@@ -131,9 +131,9 @@ class Predicter(QWidget):
 
         self.btn5.setText('predict')
 
-    def predict_single(self, ori_imgs):
+    def predict_single(self, ori_imgs, filenames):
         try:
-            predict_1ax(ori_imgs, self.model, self.outpath)
+            predict_1ax(ori_imgs, self.model, self.outpath, filenames)
         except Exception as e:
             print(e)
         if self.labelpath != "":
