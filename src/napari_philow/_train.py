@@ -14,7 +14,7 @@ from tensorflow.keras.callbacks import CSVLogger, ModelCheckpoint
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 from models import get_nested_unet
-from src.napari_philow._utils import combine_blocks, load_X_gray, load_Y_gray, select_train_data, divide_imgs
+from napari_philow._utils import combine_blocks, load_X_gray, load_Y_gray, select_train_data, divide_imgs
 
 
 @register_dock_widget(menu="PHILOW > Train mode")

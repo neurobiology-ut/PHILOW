@@ -9,8 +9,8 @@ from qtpy.QtWidgets import (QWidget, QVBoxLayout, QPushButton, QSizePolicy, QLab
 
 import utils
 from models import get_nested_unet
-from src.napari_philow._predict import predict_3ax, predict_1ax
-from src.napari_philow._utils import combine_blocks
+from napari_philow._predict import predict_3ax, predict_1ax
+from napari_philow._utils import combine_blocks
 
 
 @register_dock_widget(menu="PHILOW > Prediction mode")

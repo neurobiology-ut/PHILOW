@@ -3,7 +3,7 @@ import os
 import cv2
 import numpy as np
 
-from src.napari_philow._utils import denormalize_y, divide_imgs, load_Y_gray, merge_imgs
+from napari_philow._utils import denormalize_y, divide_imgs, load_Y_gray, merge_imgs
 
 
 def predict(X_test, model, out_dir):
@@ -25,7 +25,6 @@ def predict(X_test, model, out_dir):
     else:
         for i, y in enumerate(Y_pred):
             cv2.imwrite(os.path.join(out_dir, str(i).zfill(6) + '.png'), denormalize_y(y))
-
 
 
 def predict_3ax(ori_imgs, model, out_dir):

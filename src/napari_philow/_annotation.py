@@ -12,8 +12,8 @@ from qtpy.QtWidgets import QWidget, QPushButton, QSizePolicy, QLineEdit, QCheckB
 from scipy import ndimage
 from skimage import io
 
-from src.napari_philow._data_manager import Datamanager
-from src.napari_philow._utils import combine_blocks, load_images, load_saved_masks, load_raw_masks, label_ct, \
+from napari_philow._data_manager import Datamanager
+from napari_philow._utils import combine_blocks, load_images, load_saved_masks, load_raw_masks, label_ct, \
     label_and_sort, save_masks, crop_img, show_so_layer
 
 
