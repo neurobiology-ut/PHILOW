@@ -93,7 +93,7 @@ def predict_3ax(ori_imgs, model, out_dir, filenames):
             0
         )
         # cv2.imwrite(f'{out_dir_merge}_raw/{str(i).zfill(4)}.png', img_)
-        cv2.imwrite(f'{out_dir_merge}/{filenames[i]}', img_)
+        cv2.imwrite(f'{out_dir_merge}_raw/{filenames[i]}', img_)
 
 
 def predict_1ax(ori_imgs, model, out_dir, filenames):
@@ -137,4 +137,4 @@ def predict_1ax(ori_imgs, model, out_dir, filenames):
             0
         )
         # cv2.imwrite(f'{out_dir_merge}_raw/{str(i).zfill(4)}.png', img_)
-        cv2.imwrite(f'{out_dir_merge}/{filenames[i]}', img_)
+        cv2.imwrite(f'{out_dir_merge}_raw/{filenames[i]}', img_)
