@@ -7,7 +7,7 @@ from napari_tools_menu import register_dock_widget
 from qtpy.QtWidgets import (QWidget, QVBoxLayout, QPushButton, QSizePolicy, QLabel, QFileDialog,
                             QCheckBox)
 
-from models import get_nested_unet
+from napari_philow._models import get_nested_unet
 from napari_philow._predict import predict_3ax, predict_1ax
 from napari_philow._utils import combine_blocks, load_X_gray
 

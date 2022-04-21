@@ -13,7 +13,7 @@ from qtpy.QtWidgets import QWidget, QPushButton, QSizePolicy, QLabel, QVBoxLayou
 from tensorflow.keras.callbacks import CSVLogger, ModelCheckpoint
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
-from models import get_nested_unet
+from napari_philow._models import get_nested_unet
 from napari_philow._utils import combine_blocks, load_X_gray, load_Y_gray, select_train_data, divide_imgs
 
 
