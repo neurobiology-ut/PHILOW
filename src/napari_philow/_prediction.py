@@ -121,7 +121,9 @@ class Predicter(QWidget):
         if self.labelpath != "":
             try:
                 csv, csv_path = self.get_newest_csv()
-                if csv:
+                if csv is None:
+                    pass
+                else:
                     label_names = [node.filename for node in csv.itertuples() if node.train == "Checked"]
                     for ln in label_names:
                         shutil.copy(os.path.join(self.labelpath, ln), os.path.join(self.outpath, 'merged_prediction'))
@@ -141,7 +143,9 @@ class Predicter(QWidget):
             try:
                 csv, csv_path = self.get_newest_csv()
                 print('find csv', csv_path)
-                if csv:
+                if csv is None:
+                    pass
+                else:
                     label_names = [node.filename for node in csv.itertuples() if node.train == "Checked"]
                     print(label_names)
                     for ln in label_names:
