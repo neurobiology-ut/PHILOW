@@ -7,10 +7,9 @@ from napari_tools_menu import register_dock_widget
 from qtpy.QtWidgets import (QWidget, QVBoxLayout, QPushButton, QSizePolicy, QLabel, QFileDialog,
                             QCheckBox)
 
-import utils
 from models import get_nested_unet
 from napari_philow._predict import predict_3ax, predict_1ax
-from napari_philow._utils import combine_blocks
+from napari_philow._utils import combine_blocks, load_X_gray
 
 
 @register_dock_widget(menu="PHILOW > Prediction mode")
@@ -99,7 +98,7 @@ class Predicter(QWidget):
         return csv, str(csvs[-1])
 
     def predicter(self):
-        ori_imgs, ori_filenames = utils.load_X_gray(self.opath)
+        ori_imgs, ori_filenames = load_X_gray(self.opath)
         print(ori_imgs.shape)
         input_shape = (512, 512, 1)
         num_classes = 1
