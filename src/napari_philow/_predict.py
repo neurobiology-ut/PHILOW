@@ -114,7 +114,8 @@ def predict_1ax(ori_imgs, model, out_dir):
     pred_xy_imgs, _ = load_Y_gray(os.path.join(out_dir, "pred_xy"))
     merged_imgs_xy = merge_imgs(pred_xy_imgs, ori_image_shape)
 
-    mito_imgs_ave = merged_imgs_xy * 255
+    # mito_imgs_ave = merged_imgs_xy * 255
+    mito_imgs_ave = merged_imgs_xy
 
     out_dir_merge = os.path.join(out_dir, 'merged_prediction')
     os.makedirs(out_dir_merge, exist_ok=True)
