@@ -140,7 +140,8 @@ class Predicter(QWidget):
             print('copy previous mask')
             try:
                 csv, csv_path = self.get_newest_csv()
-                print('find csv')
+                print('find csv', csv_path)
+                print(csv)
                 if csv:
                     label_names = [node.filename for node in csv.itertuples() if node.train == "Checked"]
                     for ln in label_names:
