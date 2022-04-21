@@ -141,9 +141,9 @@ class Predicter(QWidget):
             try:
                 csv, csv_path = self.get_newest_csv()
                 print('find csv', csv_path)
-                print(csv)
                 if csv:
                     label_names = [node.filename for node in csv.itertuples() if node.train == "Checked"]
+                    print(label_names)
                     for ln in label_names:
                         print('copy ln')
                         shutil.copy(os.path.join(self.labelpath, ln), os.path.join(self.outpath, 'merged_prediction'))
