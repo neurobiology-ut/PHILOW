@@ -95,11 +95,9 @@ If you want to use the currently displayed slice as your training data, click th
 
 ### Train and pred with your gpu machine
 #### Train
-To train on your GPU machine, open launcher at first.
-```angular2
-python launcher_simple.py
-```
-1) Select Trainer   
+To train on your GPU machine (or with CPU), 
+
+1) Plugins > napari-PHILOW > Trainer
    
 2) Select original dir : all slices must be in separate PNG and must be sequentially numbered (e.g. 000.png, 001.png ...)   
    

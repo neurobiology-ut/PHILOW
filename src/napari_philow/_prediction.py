@@ -137,6 +137,7 @@ class Predicter(QWidget):
         except Exception as e:
             print(e)
         if self.labelpath != "":
+            print('copy previous mask')
             try:
                 csv, csv_path = self.get_newest_csv()
                 if csv:
@@ -144,6 +145,7 @@ class Predicter(QWidget):
                     for ln in label_names:
                         shutil.copy(os.path.join(self.labelpath, ln), os.path.join(self.outpath, 'merged_prediction'))
                     shutil.copy(str(csv_path), os.path.join(self.outpath, 'merged_prediction'))
+                    print('csv copied')
             except Exception as e:
                 print(e)
 
