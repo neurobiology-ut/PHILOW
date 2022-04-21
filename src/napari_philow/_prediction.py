@@ -140,9 +140,11 @@ class Predicter(QWidget):
             print('copy previous mask')
             try:
                 csv, csv_path = self.get_newest_csv()
+                print('find csv')
                 if csv:
                     label_names = [node.filename for node in csv.itertuples() if node.train == "Checked"]
                     for ln in label_names:
+                        print('copy ln')
                         shutil.copy(os.path.join(self.labelpath, ln), os.path.join(self.outpath, 'merged_prediction'))
                     shutil.copy(str(csv_path), os.path.join(self.outpath, 'merged_prediction'))
                     print('csv copied')

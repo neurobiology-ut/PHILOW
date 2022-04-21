@@ -7,7 +7,6 @@ from napari_philow._utils import denormalize_y, divide_imgs, load_Y_gray, merge_
 
 
 def predict(X_test, model, out_dir):
-
     BATCH_SIZE = 1
     Y_pred = model.predict(X_test, BATCH_SIZE)
 
@@ -28,7 +27,6 @@ def predict(X_test, model, out_dir):
 
 
 def predict_3ax(ori_imgs, model, out_dir, filenames):
-
     os.makedirs(out_dir, exist_ok=True)
 
     # XY
@@ -72,7 +70,7 @@ def predict_3ax(ori_imgs, model, out_dir, filenames):
                                 (ori_image_shape[1], ori_image_shape[2], ori_image_shape[0], ori_image_shape[3]))
 
     mito_imgs_ave = merged_imgs_xy * 255 // 3 + merged_imgs_yz.transpose(1, 2, 0, 3) * 255 // 3 \
-                                              + merged_imgs_zx.transpose(2, 0, 1, 3) * 255 // 3
+                    + merged_imgs_zx.transpose(2, 0, 1, 3) * 255 // 3
 
     out_dir_merge = os.path.join(out_dir, 'merged_prediction')
     os.makedirs(out_dir_merge, exist_ok=True)
@@ -85,7 +83,8 @@ def predict_3ax(ori_imgs, model, out_dir, filenames):
             1,
             0
         )
-        cv2.imwrite(f'{out_dir_merge}/{str(i).zfill(4)}.png', img)
+        # cv2.imwrite(f'{out_dir_merge}/{str(i).zfill(4)}.png', img)
+        cv2.imwrite(f'{out_dir_merge}/{filenames[i]}', img)
 
         # averaged
         img_ = np.where(
@@ -93,11 +92,11 @@ def predict_3ax(ori_imgs, model, out_dir, filenames):
             mito_imgs_ave[:, :, :, 0][i],
             0
         )
-        cv2.imwrite(f'{out_dir_merge}_raw/{str(i).zfill(4)}.png', img_)
+        # cv2.imwrite(f'{out_dir_merge}_raw/{str(i).zfill(4)}.png', img_)
+        cv2.imwrite(f'{out_dir_merge}/{filenames[i]}', img_)
 
 
 def predict_1ax(ori_imgs, model, out_dir, filenames):
-
     os.makedirs(out_dir, exist_ok=True)
 
     # XY
