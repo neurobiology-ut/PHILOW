@@ -107,14 +107,12 @@ To train on your GPU machine (or with CPU),
    
 5) Click on the "start training" button   
 
-6) Check the command line for the progress of training. If you want to stop in the middle, click stop button.   
+6) Dice score and dice loss are displayed. For more detail, check the command line for the progress of training. If you want to stop in the middle, click stop button.   
    
 #### Predict
-To predict labels on your machine, open launcher at first.   
-```angular2
-python launcher_simple.py
-```
-1) Select Predicter
+To predict labels on your machine,  
+
+1) Plugins > napari-PHILOW > Predicter
    
 2) Select original dir : all slices must be in separate PNG and must be sequentially numbered (e.g. 000.png, 001.png ...)   
    
@@ -128,7 +126,9 @@ python launcher_simple.py
    
 7) Click on the "predict" button  
 
-8) Check the command line for the progress of prediction. If you want to stop in the middle, use ctrl+C.    
+8) Check the command line for the progress of prediction. If you want to stop in the middle, use ctrl+C.   
+
+9) You can start the next round of annotation by selecting the merged_prediction directory as the mask dir in Annotation mode.
 
 ### Train and predict with Google Colab   
 If you don't have a GPU machine, you can use Google Colab to perform GPU-based training and prediction for free.    
