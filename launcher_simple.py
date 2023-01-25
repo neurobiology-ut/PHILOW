@@ -89,6 +89,11 @@ class Loader(QWidget):
             filenames = [fn.name for fn in sorted(list(Path(self.opath).glob('./*png')))]
             for i in range(len(labels)):
                 io.imsave(os.path.join(self.modpath, str(i).zfill(4) + '.png'), labels[i])
+        elif len(os.listdir(self.modpath)) == 0:
+            labels = np.zeros_like(images.compute())
+            filenames = [fn.name for fn in sorted(list(Path(self.opath).glob('./*png')))]
+            for i in range(len(labels)):
+                io.imsave(os.path.join(self.modpath, str(i).zfill(4) + '.png'), labels[i])            
         else:
             labels = utils.load_saved_masks(self.modpath)
         try:
