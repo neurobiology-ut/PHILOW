@@ -210,15 +210,15 @@ def launch_selector(original, label, select, mod_path, select_path):
     layer1 = view1.layers[1]
     layer2 = view1.layers[2]
 
-    def select_target():
+    def select_target(layer, event):
         global base_label
         global only_label
     
         @layer1.bind_key('q', overwrite = True)
-        def select(layer):
+        def select_event(event):
             global base_label
             global only_label
-            q_point = np.round(layer1.coordinates).astype(int)
+            q_point = np.round(event.position).astype(int)
             print("select_label : ", labels_imgs[q_point[0], q_point[1], q_point[2]], "select_point : ", q_point)
             if labels_imgs[q_point[0], q_point[1], q_point[2]]:
                 target_label = labels_imgs[q_point[0], q_point[1], q_point[2]]
@@ -231,17 +231,18 @@ def launch_selector(original, label, select, mod_path, select_path):
 
     @layer1.mouse_drag_callbacks.append
     def main(layer, event):
-        select_target()
+        select_target(layer, event)
 
-    def deselect_target():
+
+    def deselect_target(layer, event):
         global base_label
         global only_label
 
         @layer2.bind_key('w', overwrite = True)
-        def deselect(layer):
+        def deselect_event(event):
             global base_label
             global only_label
-            w_point = np.round(layer2.coordinates).astype(int)
+            w_point = np.round(event.position).astype(int)
             print("select_label : ", labels_imgs[w_point[0], w_point[1], w_point[2]], "select_point : ", w_point)
             if labels_imgs[w_point[0], w_point[1], w_point[2]]:
                 target_label = labels_imgs[w_point[0], w_point[1], w_point[2]]
@@ -254,7 +255,7 @@ def launch_selector(original, label, select, mod_path, select_path):
 
     @layer2.mouse_drag_callbacks.append
     def main(layer, event):
-        deselect_target()
+        deselect_target(layer, event)
 
     @magicgui(dirname={"mode": "d"})
     def mod_dirpicker(dirname=Path(mod_path)):
