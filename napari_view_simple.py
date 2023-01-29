@@ -97,8 +97,9 @@ def launch_viewers(original, base, raw, r_path, model_type, checkbox):
         print("The filename is:", dirname)
         return dirname
 
-    gui = dirpicker.Gui(show=True)
-    view1.window.add_dock_widget(gui)
+    #gui = dirpicker.Gui(show=True)
+    #view1.window.add_dock_widget(gui)
+    view1.window.add_dock_widget(dirpicker, area='bottom')
 
     @magicgui(call_button="save")
     def saver():
@@ -106,8 +107,9 @@ def launch_viewers(original, base, raw, r_path, model_type, checkbox):
         print("The directory is:", out_dir)
         return utils.save_masks(layer1.data, out_dir)
 
-    gui2 = saver.Gui(show=True)
-    view1.window.add_dock_widget(gui2, area='bottom')
+    #gui2 = saver.Gui(show=True)
+    #view1.window.add_dock_widget(gui2, area='bottom')
+    view1.window.add_dock_widget(saver, area='bottom')
 
     dmg = Datamanager()
     dmg.prepare(r_path, model_type, checkbox)
@@ -263,8 +265,9 @@ def launch_selector(original, label, select, mod_path, select_path):
         print("The filename is:", dirname)
         return dirname
 
-    gui1 = mod_dirpicker.Gui(show=True)
-    view1.window.add_dock_widget(gui1, area='bottom')
+    #gui1 = mod_dirpicker.Gui(show=True)
+    #view1.window.add_dock_widget(gui1, area='bottom')
+    view1.window.add_dock_widget(mod_dirpicker, area='bottom')
 
     @magicgui(dirname={"mode": "d"})
     def select_dirpicker(dirname=Path(select_path)):
@@ -272,13 +275,15 @@ def launch_selector(original, label, select, mod_path, select_path):
         print("The filename is:", dirname)
         return dirname
 
-    gui3 = select_dirpicker.Gui(show=True)
-    view1.window.add_dock_widget(gui3, area='bottom')
+    #gui3 = select_dirpicker.Gui(show=True)
+    #view1.window.add_dock_widget(gui3, area='bottom')
+    view1.window.add_dock_widget(select_dirpicker, area='bottom')
 
     @magicgui(call_button="save")
     def saver():
         print("The directory is:", select_path)
         return utils.save_masks(layer1.data, mod_path), utils.save_masks(layer2.data, select_path)
 
-    gui4 = saver.Gui(show=True)
-    view1.window.add_dock_widget(gui4, area='bottom')
+    #gui4 = saver.Gui(show=True)
+    #view1.window.add_dock_widget(gui4, area='bottom')
+    view1.window.add_dock_widget(saver, area='bottom')
