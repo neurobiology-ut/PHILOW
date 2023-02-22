@@ -3,7 +3,6 @@ import shutil
 from pathlib import Path
 
 import pandas as pd
-from napari_tools_menu import register_dock_widget
 from qtpy.QtWidgets import (QWidget, QVBoxLayout, QPushButton, QSizePolicy, QLabel, QFileDialog,
                             QCheckBox)
 
@@ -12,7 +11,6 @@ from napari_philow._predict import predict_3ax, predict_1ax
 from napari_philow._utils import combine_blocks, load_X_gray
 
 
-@register_dock_widget(menu="PHILOW > Prediction mode")
 class Predicter(QWidget):
     def __init__(self):
         super().__init__()

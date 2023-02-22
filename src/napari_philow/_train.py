@@ -8,8 +8,7 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 from napari.qt import thread_worker
-from napari_tools_menu import register_dock_widget
-from qtpy.QtWidgets import QWidget, QPushButton, QSizePolicy, QLabel, QVBoxLayout, QFileDialog
+from qtpy.QtWidgets import QWidget, QPushButton, QSizePolicy, QLabel, QVBoxLayout, QFileDialog, QCheckBox
 from tensorflow.keras.callbacks import CSVLogger, ModelCheckpoint
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
@@ -17,7 +16,6 @@ from napari_philow._models import get_nested_unet
 from napari_philow._utils import combine_blocks, load_X_gray, load_Y_gray, select_train_data, divide_imgs
 
 
-@register_dock_widget(menu="PHILOW > Train mode")
 class Trainer(QWidget):
     def __init__(self, napari_viewer):
         super().__init__()
@@ -41,6 +39,8 @@ class Trainer(QWidget):
         self.lbl = QLabel('original dir', self)
         self.lbl2 = QLabel('label dir', self)
         self.lbl3 = QLabel('model output dir', self)
+        self.checkBox = QCheckBox("resize to 256x256?")
+        self.checkBox.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.build()
 
         self.model = None

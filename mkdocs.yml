@@ -1,9 +1,0 @@
-site_name: napari-PHILOW
-site_description: PHILOW is an interactive deep learning-based platform for 3D datasets
-site_author: Hiroki Kawai
-
-theme: readthedocs
-
-
-pages:
-- Home: index.md

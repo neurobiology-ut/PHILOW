@@ -7,7 +7,6 @@ from magicgui import magicgui
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from napari._qt.qthreading import thread_worker
-from napari_tools_menu import register_dock_widget
 from qtpy.QtWidgets import QWidget, QPushButton, QSizePolicy, QLineEdit, QCheckBox, QLabel, QVBoxLayout, QFileDialog
 from scipy import ndimage
 from skimage import io
@@ -17,7 +16,7 @@ from napari_philow._utils import combine_blocks, load_images, load_saved_masks, 
     label_and_sort, save_masks, crop_img, show_so_layer
 
 
-@register_dock_widget(menu="PHILOW > Annotation mode")
+
 class AnnotationMode(QWidget):
     def __init__(self, napari_viewer):
         super().__init__()
