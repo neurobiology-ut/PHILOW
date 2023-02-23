@@ -33,8 +33,6 @@ class RandomRotation(object):
 
 
 class RandomMirror(object):
-    """50%の確率で左右反転させるクラス"""
-
     def __call__(self, img, anno_class_img):
         if np.random.randint(2):
             img = ImageOps.mirror(img)
@@ -43,8 +41,6 @@ class RandomMirror(object):
 
 
 class RandomBrightness(object):
-    """brightnessを変化させる"""
-
     def __call__(self, img, anno_class_img):
 
         return transforms.ColorJitter(brightness=0.5)(img), anno_class_img
@@ -70,9 +66,6 @@ class Resize(object):
 
     def __call__(self, img, anno_class_img):
 
-        # width = img.size[0]  # img.size=[幅][高さ]
-        # height = img.size[1]  # img.size=[幅][高さ]
-
         img = img.resize((self.input_size, self.input_size),
                          Image.BICUBIC)
         anno_class_img = anno_class_img.resize(
@@ -82,8 +75,6 @@ class Resize(object):
 
 
 class RandomGaussianBlur(object):
-    """brightnessを変化させる"""
-
     def __call__(self, img, anno_class_img):
         if np.random.randint(2):
             img = transforms.GaussianBlur(kernel_size=5)(img)
@@ -104,4 +95,3 @@ class RondomShift(object):
         max_dy = float(height_range * h)
         tx = int(round(torch.empty(1).uniform_(-max_dx, max_dx).item()))
         ty = int(round(torch.empty(1).uniform_(-max_dy, max_dy).item()))
-        
