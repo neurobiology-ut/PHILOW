@@ -88,9 +88,9 @@ class RandomNoise(object):
         return img, anno_class_img
 
 
-class RondomShift(object):
-    def __call__(self, img, mask, height_range, width_range):
-        angle, translations, scale, shear = transforms.RandomAffine.get_params(0,[width_range, height_range])
+class RondomShiftScale(object):
+    def __call__(self, img, mask, height_range, width_range, scale_range):
+        angle, translations, scale, shear = transforms.RandomAffine.get_params(0,translace = [width_range, height_range], scale_ranges=scale_range)
         img = functional.affine(img, angle, translations, scale, shear)
         mask = functional.affine(mask, angle, translations, scale, shear)
         return img, mask
