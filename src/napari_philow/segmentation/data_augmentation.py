@@ -90,8 +90,7 @@ class RandomNoise(object):
 
 class RondomShift(object):
     def __call__(self, img, mask, height_range, width_range):
-        w, h = img.size
-        max_dx = float(width_range * w)
-        max_dy = float(height_range * h)
-        tx = int(round(torch.empty(1).uniform_(-max_dx, max_dx).item()))
-        ty = int(round(torch.empty(1).uniform_(-max_dy, max_dy).item()))
+        angle, translations, scale, shear = transforms.RandomAffine.get_params(0,[width_range, height_range])
+        img = functional.affine(img, angle, translations, scale, shear)
+        mask = functional.affine(mask, angle, translations, scale, shear)
+        return img, mask
