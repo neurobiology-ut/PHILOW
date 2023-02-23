@@ -1,0 +1,107 @@
+import numpy as np
+import skimage
+import torch
+from PIL import Image, ImageOps
+from torchvision import transforms
+from torchvision.transforms import functional
+
+
+class Compose(object):
+    def __init__(self, transforms):
+        self.transforms = transforms
+
+    def __call__(self, img, anno_class_img):
+        for t in self.transforms:
+            img, anno_class_img = t(img, anno_class_img)
+        return img, anno_class_img
+
+
+class RandomRotation(object):
+    def __init__(self, angle):
+        self.angle = angle
+
+    def __call__(self, img, anno_class_img):
+
+        # 回転角度を決める
+        rotate_angle = (np.random.uniform(self.angle[0], self.angle[1]))
+
+        # 回転
+        img = img.rotate(rotate_angle, Image.BILINEAR)
+        anno_class_img = anno_class_img.rotate(rotate_angle, Image.NEAREST)
+
+        return img, anno_class_img
+
+
+class RandomMirror(object):
+    """50%の確率で左右反転させるクラス"""
+
+    def __call__(self, img, anno_class_img):
+        if np.random.randint(2):
+            img = ImageOps.mirror(img)
+            anno_class_img = ImageOps.mirror(anno_class_img)
+        return img, anno_class_img
+
+
+class RandomBrightness(object):
+    """brightnessを変化させる"""
+
+    def __call__(self, img, anno_class_img):
+
+        return transforms.ColorJitter(brightness=0.5)(img), anno_class_img
+
+
+class RandomCrop(object):
+    """randomにcropするクラス"""
+    def __init__(self,size):
+        self.size = size
+
+    def __call__(self, img, anno_class_img):
+        i, j, h, w = transforms.RandomCrop.get_params(img, output_size=(self.size, self.size))
+        img = functional.crop(img, i, j, h, w)
+        anno_class_img = functional.crop(anno_class_img, i, j, h, w)
+        return img, anno_class_img
+
+
+class Resize(object):
+    """引数input_sizeに大きさを変形するクラス"""
+
+    def __init__(self, input_size):
+        self.input_size = input_size
+
+    def __call__(self, img, anno_class_img):
+
+        # width = img.size[0]  # img.size=[幅][高さ]
+        # height = img.size[1]  # img.size=[幅][高さ]
+
+        img = img.resize((self.input_size, self.input_size),
+                         Image.BICUBIC)
+        anno_class_img = anno_class_img.resize(
+            (self.input_size, self.input_size), Image.NEAREST)
+
+        return img, anno_class_img
+
+
+class RandomGaussianBlur(object):
+    """brightnessを変化させる"""
+
+    def __call__(self, img, anno_class_img):
+        if np.random.randint(2):
+            img = transforms.GaussianBlur(kernel_size=5)(img)
+        return img, anno_class_img
+
+
+class RandomNoise(object):
+    def __call__(self, img, anno_class_img):
+        if np.random.randint(2):
+            img = Image.fromarray((255 * skimage.util.random_noise(np.array(img), mode='s&p')).astype(np.uint8))
+        return img, anno_class_img
+
+
+class RondomShift(object):
+    def __call__(self, img, mask, height_range, width_range):
+        w, h = img.size
+        max_dx = float(width_range * w)
+        max_dy = float(height_range * h)
+        tx = int(round(torch.empty(1).uniform_(-max_dx, max_dx).item()))
+        ty = int(round(torch.empty(1).uniform_(-max_dy, max_dy).item()))
+        

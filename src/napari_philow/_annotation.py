@@ -16,7 +16,6 @@ from napari_philow._utils import combine_blocks, load_images, load_saved_masks, 
     label_and_sort, save_masks, crop_img, show_so_layer
 
 
-
 class AnnotationMode(QWidget):
     def __init__(self, napari_viewer):
         super().__init__()
@@ -76,15 +75,13 @@ class AnnotationMode(QWidget):
             self.modpath = os.path.join(os.path.dirname(self.opath), self.textbox.text())
             os.makedirs(self.modpath, exist_ok=True)
             filenames = [fn.name for fn in sorted(list(Path(self.opath).glob('./*png')))]
-            #for i in range(len(labels)):
-            #    io.imsave(os.path.join(self.modpath, str(i).zfill(4) + '.png'), labels[i])
             for i, filename in enumerate(filenames):
                 io.imsave(os.path.join(self.modpath, filename), labels[i])
         elif len(os.listdir(self.modpath)) == 0:
             labels = np.zeros_like(images.compute())
             filenames = [fn.name for fn in sorted(list(Path(self.opath).glob('./*png')))]
             for i, filename in enumerate(filenames):
-                io.imsave(os.path.join(self.modpath, filename), labels[i])            
+                io.imsave(os.path.join(self.modpath, filename), labels[i])
         else:
             labels = load_saved_masks(self.modpath)
         try:
@@ -123,6 +120,7 @@ class AnnotationMode(QWidget):
             print(nums)
             labeled_c = label_ct(labeled_sorted, nums, 10)
             return labeled_c, labeled_sorted, nums, viewer
+
         if len(np.unique(base_label)) > 1:
             create_label(self._viewer)
 
