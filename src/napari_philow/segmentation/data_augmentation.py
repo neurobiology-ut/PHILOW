@@ -1,6 +1,5 @@
 import numpy as np
 import skimage
-import torch
 from PIL import Image, ImageOps
 from torchvision import transforms
 from torchvision.transforms import functional
@@ -21,7 +20,6 @@ class RandomRotation(object):
         self.angle = angle
 
     def __call__(self, img, anno_class_img):
-
         # 回転角度を決める
         rotate_angle = (np.random.uniform(self.angle[0], self.angle[1]))
 
@@ -42,13 +40,13 @@ class RandomMirror(object):
 
 class RandomBrightness(object):
     def __call__(self, img, anno_class_img):
-
         return transforms.ColorJitter(brightness=0.5)(img), anno_class_img
 
 
 class RandomCrop(object):
     """randomにcropするクラス"""
-    def __init__(self,size):
+
+    def __init__(self, size):
         self.size = size
 
     def __call__(self, img, anno_class_img):
@@ -65,7 +63,6 @@ class Resize(object):
         self.input_size = input_size
 
     def __call__(self, img, anno_class_img):
-
         img = img.resize((self.input_size, self.input_size),
                          Image.BICUBIC)
         anno_class_img = anno_class_img.resize(
@@ -89,8 +86,44 @@ class RandomNoise(object):
 
 
 class RondomShiftScale(object):
-    def __call__(self, img, mask, height_range, width_range, scale_range):
-        angle, translations, scale, shear = transforms.RandomAffine.get_params(0,translace = [width_range, height_range], scale_ranges=scale_range)
+    def __init__(self, height_range, width_range, scale_range):
+        """
+        Args:
+            height_range (float):
+            width_range (float):
+            scale_range (list[int]):
+        """
+        self.input_size = height_range
+        self.width_range = width_range
+        self.scale_range = scale_range
+
+    def __call__(self, img, mask):
+        """
+        Args:
+            img (PIL Image or Tensor):
+            mask (PIL Image or Tensor):
+        Returns:
+            Tuple of PIL Image or Tensor: Transformed image and mask
+        """
+        angle, translations, scale, shear = transforms.RandomAffine.get_params(0, translace=[self.width_range,
+                                                                                             self.height_range],
+                                                                               scale_ranges=self.scale_range)
         img = functional.affine(img, angle, translations, scale, shear)
         mask = functional.affine(mask, angle, translations, scale, shear)
+        return img, mask
+
+
+class RandomHFlip(object):
+    def __call__(self, img, mask):
+        if np.random.randint(2):
+            functional.hflip(img)
+            functional.hflip(mask)
+        return img, mask
+
+
+class RandomVFlip(object):
+    def __call__(self, img, mask):
+        if np.random.randint(2):
+            functional.vflip(img)
+            functional.vflip(mask)
         return img, mask
