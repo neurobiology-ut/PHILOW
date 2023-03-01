@@ -1,6 +1,6 @@
 import numpy as np
 import skimage
-from PIL import Image, ImageOps
+from PIL import Image
 from torchvision import transforms
 from torchvision.transforms import functional
 

@@ -2,12 +2,6 @@ import os
 import time
 
 import torch
-from segmentation_models_pytorch import UnetPlusPlus
-from torch import optim
-from torch.utils import data
-
-from dataset import PHILOWDataset, ImageTransform
-from loss import DiceBCELoss
 
 
 def train_model(output_dir, net, dataloaders_dict, criterion, scheduler, optimizer, num_epochs):
