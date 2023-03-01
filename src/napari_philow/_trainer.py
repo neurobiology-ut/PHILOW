@@ -152,7 +152,7 @@ class Trainer(QWidget):
             # train_names = names[0: split_index]
             # val_names = names[split_index:]
 
-            w, h = Image.open(os.path.join(self.opath), names[0]).size
+            w, h = Image.open(os.path.join(self.opath, names[0])).size
 
             train_dataset = PHILOWDataset(self.opath, self.labelpath, names, 'train', ImageTransform(512),
                                           multiplier=math.ceil(max(w, h) / 512))
