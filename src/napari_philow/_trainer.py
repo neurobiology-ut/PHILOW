@@ -144,8 +144,7 @@ class Trainer(QWidget):
             
             """
 
-            train_csv = self.get_newest_csv()
-            df = pd.read_csv(train_csv, index_col=0)
+            df = self.get_newest_csv()
             names = list(df[df['train'] == 'checked']['filename'])
             # if validation:
             # np.random.shuffle(names)
