@@ -30,14 +30,6 @@ class RandomRotation(object):
         return img, anno_class_img
 
 
-class RandomMirror(object):
-    def __call__(self, img, anno_class_img):
-        if np.random.randint(2):
-            img = ImageOps.mirror(img)
-            anno_class_img = ImageOps.mirror(anno_class_img)
-        return img, anno_class_img
-
-
 class RandomBrightness(object):
     def __call__(self, img, anno_class_img):
         return transforms.ColorJitter(brightness=0.5)(img), anno_class_img
@@ -85,14 +77,16 @@ class RandomNoise(object):
         return img, anno_class_img
 
 
-class RondomShiftScale(object):
-    def __init__(self, height_range, width_range, scale_range):
+class RondomRotateShiftScale(object):
+    def __init__(self, angle, height_range, width_range, scale_range):
         """
         Args:
+            angle (sequence or number):
             height_range (float):
             width_range (float):
             scale_range (list[int]):
         """
+        self.angle = angle
         self.input_size = height_range
         self.width_range = width_range
         self.scale_range = scale_range
@@ -105,7 +99,7 @@ class RondomShiftScale(object):
         Returns:
             Tuple of PIL Image or Tensor: Transformed image and mask
         """
-        angle, translations, scale, shear = transforms.RandomAffine.get_params(0, translace=[self.width_range,
+        angle, translations, scale, shear = transforms.RandomAffine.get_params(self.angle, translace=[self.width_range,
                                                                                              self.height_range],
                                                                                scale_ranges=self.scale_range)
         img = functional.affine(img, angle, translations, scale, shear)

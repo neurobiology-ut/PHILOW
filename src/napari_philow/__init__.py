@@ -6,7 +6,7 @@ except ImportError:
 
 
 from ._annotation import AnnotationMode
-from ._train import Trainer
+from ._trainer import Trainer
 from ._prediction import Predicter
 
 __all__ = (

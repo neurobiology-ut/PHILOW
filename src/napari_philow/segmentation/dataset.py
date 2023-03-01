@@ -9,22 +9,24 @@ from skimage import io
 from torch.utils.data import Dataset
 from torchvision.transforms import functional
 
-from data_augmentation import RandomRotation, Resize, RandomMirror, RandomCrop, Compose, RandomBrightness, RandomNoise
+from data_augmentation import RandomRotation, Resize, RandomMirror, RandomCrop, Compose, RandomBrightness, RandomNoise, \
+    RandomVFlip, RandomHFlip, RondomRotateShiftScale
 
 
 class PHILOWDataset(Dataset):
-    def __init__(self, images_dir, labels_dir, train_csv, phase, transform, multiplier=1):
+    def __init__(self, images_dir, labels_dir, names, phase, transform, multiplier=1):
         """PHILOW Dataset. Read images, apply augmentation and preprocessing transformations.
         Args:
             images_dir (str): path to images folder
             labels_dir (str): path to labels folder
-            train_csv (str): path to train csv
+            names (list[str]): file names
             phase (str): 'train' or 'val'
             transform (ImageTransform): data transfromation pipeline
             multiplier (int): How many times an image is loaded in one epoch
         """
-        df = pd.read_csv(train_csv, index_col=0)
-        self.names = list(df[df['train']=='checked']['filename'])
+        self.images_dir = images_dir
+        self.labels_dir = labels_dir
+        self.names = names * multiplier
         self.phase = phase
         self.transform = transform
 
@@ -37,34 +39,28 @@ class PHILOWDataset(Dataset):
 
     def pull_item(self, index):
         # read data
-        img = Image.open(str(self.images[index])).convert("L")
-        anno_class_img = Image.open(str(self.labels[index])).convert("L")
+        img = Image.open(os.path.join(self.images_dir, str(self.names[index]))).convert("L")
+        mask = Image.open(os.path.join(self.labels_dir, str(self.names[index]))).convert("L")
 
         # 3. 前処理を実施
-        img, anno_class_img = self.transform(self.phase, img, anno_class_img)
-        anno_class_img = anno_class_img.point(lambda x: x * 255)
-        return functional.to_tensor(img), functional.to_tensor(anno_class_img)
+        img, mask = self.transform(self.phase, img, mask)
+        # mask = mask.point(lambda x: x * 255) TODO: multichannel support
+        return functional.to_tensor(img), functional.to_tensor(mask)
 
 
 class ImageTransform():
-    """
-    sizeでcropして512にresize
-    """
 
     def __init__(self, size):
         self.data_transform = {
             'train': Compose([
-                RandomRotation([0, 90]),
-                RandomCrop(size),  # resize
-                Resize(512),
-                RandomMirror(),
-                RandomBrightness(),
-                RandomNoise()
+                RandomCrop(size),
+                RondomRotateShiftScale(90, 0.1, 0.1, [0.8, 1.2]),
+                RandomVFlip(),
+                RandomHFlip()
                 # transforms.ToTensor()
             ]),
             'val': Compose([
-                RandomCrop(size),  # resize
-                Resize(512)  # ,
+                RandomCrop(size)
                 # transforms.ToTensor()
             ])
         }
