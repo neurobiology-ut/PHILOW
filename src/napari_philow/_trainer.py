@@ -1,7 +1,6 @@
 import io as IO
 import math
 import os
-import time
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -14,8 +13,7 @@ from segmentation_models_pytorch import UnetPlusPlus
 from torch import optim
 from torch.utils import data
 
-from napari_philow._models import get_nested_unet
-from napari_philow._utils import combine_blocks, load_X_gray, load_Y_gray, select_train_data, divide_imgs
+from napari_philow._utils import combine_blocks
 from napari_philow.segmentation.dataset import PHILOWDataset, ImageTransform
 from napari_philow.segmentation.loss import DiceBCELoss
 
