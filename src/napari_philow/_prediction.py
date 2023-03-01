@@ -6,9 +6,9 @@ import pandas as pd
 from qtpy.QtWidgets import (QWidget, QVBoxLayout, QPushButton, QSizePolicy, QLabel, QFileDialog,
                             QCheckBox)
 
-from napari_philow._models import get_nested_unet
-from napari_philow._predict import predict_3ax, predict_1ax
-from napari_philow._utils import combine_blocks, load_X_gray
+#from napari_philow._models import get_nested_unet
+#from napari_philow._predict import predict_3ax, predict_1ax
+#from napari_philow._utils import combine_blocks, load_X_gray
 
 
 class Predicter(QWidget):
