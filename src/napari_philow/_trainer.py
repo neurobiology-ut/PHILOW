@@ -145,7 +145,7 @@ class Trainer(QWidget):
             """
 
             df = self.get_newest_csv()
-            names = list(df[df['train'] == 'checked']['filename'])
+            names = list(df[df['train'] == 'Checked']['filename'])
             # if validation:
             # np.random.shuffle(names)
             # split_index = 9*len(names)//10
