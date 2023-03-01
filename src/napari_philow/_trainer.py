@@ -16,6 +16,7 @@ from torch.utils import data
 from napari_philow._utils import combine_blocks
 from napari_philow.segmentation.dataset import PHILOWDataset, ImageTransform
 from napari_philow.segmentation.loss import DiceBCELoss
+from napari_philow.segmentation.train import train_model
 
 
 class Trainer(QWidget):
@@ -177,7 +178,7 @@ class Trainer(QWidget):
 
             criterion = DiceBCELoss()
 
-            self.worker = create_worker(self.train_model, self.modelpath, net, dataloaders_dict, criterion, scheduler, optimizer,
+            self.worker = create_worker(train_model, self.modelpath, net, dataloaders_dict, criterion, scheduler, optimizer,
                                            num_epochs=num_epochs)
 
             self.worker.started.connect(lambda: print("worker is running..."))
