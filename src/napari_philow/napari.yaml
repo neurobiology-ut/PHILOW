@@ -7,7 +7,7 @@ contributions:
     python_name: napari_philow._annotation:AnnotationMode
   - id: napari-PHILOW.Trainer
     title: Create Trainer
-    python_name: napari_philow._train:Trainer
+    python_name: napari_philow._trainer:Trainer
   - id: napari-PHILOW.Predicter
     title: Create Predicter
     python_name: napari_philow._prediction:Predicter
