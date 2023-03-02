@@ -43,6 +43,8 @@ class AnnotationMode(QWidget):
         self.lbl4 = QLabel('model type (do not use word "train")', self)
         self.build()
 
+        self.filenames = None
+
     def build(self):
         vbox = QVBoxLayout()
         vbox.addWidget(combine_blocks(self.btn1, self.lbl))
@@ -71,19 +73,17 @@ class AnnotationMode(QWidget):
     def launch(self):
         images = load_images(self.opath)
         if self.modpath == "":
-            labels = np.zeros_like(images.compute())
             self.modpath = os.path.join(os.path.dirname(self.opath), self.textbox.text())
             os.makedirs(self.modpath, exist_ok=True)
-            filenames = [fn.name for fn in sorted(list(Path(self.opath).glob('./*png')))]
-            for i, filename in enumerate(filenames):
-                io.imsave(os.path.join(self.modpath, filename), labels[i])
-        elif len(os.listdir(self.modpath)) == 0:
+        else:
+            pass
+        if len(os.listdir(self.modpath)) == 0:
             labels = np.zeros_like(images.compute())
-            filenames = [fn.name for fn in sorted(list(Path(self.opath).glob('./*png')))]
-            for i, filename in enumerate(filenames):
+            self.filenames = [fn.name for fn in sorted(list(Path(self.opath).glob('./*png')))]
+            for i, filename in enumerate(self.filenames):
                 io.imsave(os.path.join(self.modpath, filename), labels[i])
         else:
-            labels = load_saved_masks(self.modpath)
+            labels, self.filenames = load_saved_masks(self.modpath)
         try:
             labels_raw = load_raw_masks(self.modpath + '_raw')
         except:
@@ -141,7 +141,7 @@ class AnnotationMode(QWidget):
             # out_dir = gui.dirname
             out_dir = dirpicker.dirname.value
             print("The directory is:", out_dir)
-            return save_masks(layer1.data, out_dir)
+            return save_masks(layer1.data, out_dir, self.filenames)
 
         # gui2 = saver.Gui(show=True)
         # self._viewer.window.add_dock_widget(gui2, area='bottom')

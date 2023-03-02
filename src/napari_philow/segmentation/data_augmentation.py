@@ -78,18 +78,20 @@ class RandomNoise(object):
 
 
 class RondomRotateShiftScale(object):
-    def __init__(self, angle, height_range, width_range, scale_range):
+    def __init__(self, angle, height_range, width_range, scale_range, img_size):
         """
         Args:
             angle (sequence or number):
             height_range (float):
             width_range (float):
             scale_range (list[int]):
+            img_size (list[int]): image size [width, height]
         """
         self.angle = angle
-        self.input_size = height_range
+        self.height_range = height_range
         self.width_range = width_range
         self.scale_range = scale_range
+        self.img_size = img_size
 
     def __call__(self, img, mask):
         """
@@ -99,9 +101,10 @@ class RondomRotateShiftScale(object):
         Returns:
             Tuple of PIL Image or Tensor: Transformed image and mask
         """
-        angle, translations, scale, shear = transforms.RandomAffine.get_params(self.angle, translace=[self.width_range,
+        angle, translations, scale, shear = transforms.RandomAffine.get_params(self.angle, translate=[self.width_range,
                                                                                              self.height_range],
-                                                                               scale_ranges=self.scale_range)
+                                                                               scale_ranges=self.scale_range,
+                                                                               shears=None, img_size=self.img_size)
         img = functional.affine(img, angle, translations, scale, shear)
         mask = functional.affine(mask, angle, translations, scale, shear)
         return img, mask

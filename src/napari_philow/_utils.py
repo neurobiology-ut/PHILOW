@@ -114,7 +114,7 @@ def load_saved_masks(mod_mask_dir):
     images_label = dask_image.imread.imread(filename_pattern_label)
     images_label = images_label.compute()
     base_label = images_label
-    return base_label
+    return base_label, [x.name for x in sorted(list(Path(mod_mask_dir).glob('./*png')))]
 
 
 def load_raw_masks(raw_mask_dir):
@@ -134,12 +134,11 @@ def combine_blocks(block1, block2):
     return temp_widget
 
 
-def save_masks(labels, out_path):
+def save_masks(labels, out_path, filenames):
     num = labels.shape[0]
-    os.makedirs(out_path, exist_ok=True)
     for i in range(num):
         label = labels[i]
-        io.imsave(os.path.join(out_path, str(i).zfill(4) + '.png'), label)
+        io.imsave(os.path.join(out_path, filenames[i]), label)
 
 
 def label_and_sort(base_label):

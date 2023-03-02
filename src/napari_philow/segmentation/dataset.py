@@ -38,7 +38,7 @@ class PHILOWDataset(Dataset):
 
         # 3. 前処理を実施
         img, mask = self.transform(self.phase, img, mask)
-        # mask = mask.point(lambda x: x * 255) TODO: multichannel support
+        mask = mask.point(lambda x: x * 255)  # TODO: multichannel support
         return functional.to_tensor(img), functional.to_tensor(mask)
 
 
@@ -48,7 +48,7 @@ class ImageTransform():
         self.data_transform = {
             'train': Compose([
                 RandomCrop(size),
-                RondomRotateShiftScale(90, 0.1, 0.1, [0.8, 1.2]),
+                RondomRotateShiftScale([0, 90], 0.1, 0.1, [0.8, 1.2], img_size=[size, size]),
                 RandomVFlip(),
                 RandomHFlip()
                 # transforms.ToTensor()
