@@ -2,8 +2,11 @@ import os
 
 import cv2
 import numpy as np
+from PIL import Image
+from skimage import io
 
 from napari_philow._utils import denormalize_y, divide_imgs, load_Y_gray, merge_imgs
+from napari_philow.segmentation.predict import pred_large_image
 
 
 def predict(X_test, model, out_dir):
@@ -96,45 +99,19 @@ def predict_3ax(ori_imgs, model, out_dir, filenames):
         cv2.imwrite(f'{out_dir_merge}_raw/{filenames[i]}', img_)
 
 
-def predict_1ax(ori_imgs, model, out_dir, filenames):
+def predict_1ax(ori_filenames, net, out_dir, size, device):
     os.makedirs(out_dir, exist_ok=True)
-
-    # XY
-    seped_xy_imgs = divide_imgs(ori_imgs)
-
-    predict(
-        X_test=seped_xy_imgs,
-        model=model,
-        out_dir=os.path.join(out_dir, "pred_xy"),
-    )
-
-    ori_image_shape = ori_imgs.shape
-
-    pred_xy_imgs, _ = load_Y_gray(os.path.join(out_dir, "pred_xy"))
-    merged_imgs_xy = merge_imgs(pred_xy_imgs, ori_image_shape)
-
-    # mito_imgs_ave = merged_imgs_xy * 255
-    mito_imgs_ave = merged_imgs_xy
-
     out_dir_merge = os.path.join(out_dir, 'merged_prediction')
     os.makedirs(out_dir_merge, exist_ok=True)
     os.makedirs(f"{out_dir_merge}_raw", exist_ok=True)
 
-    for i in range(mito_imgs_ave.shape[0]):
+    for filename in ori_filenames:
+        image = Image.open(str(filename))
+        mito_imgs_ave = 255 * pred_large_image(image, net, device, size)
         # threshed
-        img = np.where(
-            mito_imgs_ave[:, :, :, 0][i] >= 127,
-            1,
-            0
-        )
-        # cv2.imwrite(f'{out_dir_merge}/{str(i).zfill(4)}.png', img)
-        cv2.imwrite(f'{out_dir_merge}/{filenames[i]}', img)
+        img = np.where(mito_imgs_ave >= 127, 1, 0)
+        io.imsave(f'{out_dir_merge}/{filename.name}', img.astype('int32'))
 
-        # averaged
-        img_ = np.where(
-            mito_imgs_ave[:, :, :, 0][i] >= 127,
-            mito_imgs_ave[:, :, :, 0][i],
-            0
-        )
-        # cv2.imwrite(f'{out_dir_merge}_raw/{str(i).zfill(4)}.png', img_)
-        cv2.imwrite(f'{out_dir_merge}_raw/{filenames[i]}', img_)
+        # raw
+        img_ = np.where(mito_imgs_ave[:, :] >= 127, mito_imgs_ave, 0)
+        io.imsave(f'{out_dir_merge}_raw/{filename.name}', img_.astype('uint8'))

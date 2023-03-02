@@ -3,12 +3,14 @@ import shutil
 from pathlib import Path
 
 import pandas as pd
+import torch
 from qtpy.QtWidgets import (QWidget, QVBoxLayout, QPushButton, QSizePolicy, QLabel, QFileDialog,
                             QCheckBox)
+from segmentation_models_pytorch import UnetPlusPlus
 
-#from napari_philow._models import get_nested_unet
-#from napari_philow._predict import predict_3ax, predict_1ax
-#from napari_philow._utils import combine_blocks, load_X_gray
+from napari_philow._utils import combine_blocks
+
+from napari_philow._predict import predict_3ax, predict_1ax
 
 
 class Predicter(QWidget):
@@ -40,12 +42,15 @@ class Predicter(QWidget):
         self.btn5.clicked.connect(self.predicter)
         self.lbl = QLabel('original dir', self)
         self.lbl2 = QLabel('label dir', self)
-        self.lbl3 = QLabel('model dir (contains model.hdf5)', self)
+        self.lbl3 = QLabel('model path (.pth)', self)
         self.lbl4 = QLabel('output dir', self)
         self.build()
 
-        self.model = None
+        self.net = None
         self.worker_pred = None
+        self.ori_filenames = None
+        self.device = None
+        self.size = 512
 
     def build(self):
         vbox = QVBoxLayout()
@@ -75,7 +80,7 @@ class Predicter(QWidget):
 
     def show_dialog_model(self):
         default_path = max(self.opath, self.labelpath, os.path.expanduser('~'))
-        f_name = QFileDialog.getExistingDirectory(self, 'Open Directory', default_path)
+        f_name, _ = QFileDialog.getOpenFileName(self, 'Select weight file', default_path)
         if f_name:
             self.modelpath = f_name
             self.lbl3.setText(self.modelpath)
@@ -96,21 +101,24 @@ class Predicter(QWidget):
         return csv, str(csvs[-1])
 
     def predicter(self):
-        ori_imgs, ori_filenames = load_X_gray(self.opath)
-        print(ori_imgs.shape)
-        input_shape = (512, 512, 1)
-        num_classes = 1
+        self.ori_filenames = sorted(list(Path(self.opath).glob('./*.png')))
 
-        self.model = get_nested_unet(input_shape=input_shape, num_classes=num_classes)
-        self.model.load_weights(os.path.join(self.modelpath, "model.hdf5"))
+        self.net = UnetPlusPlus(encoder_name="efficientnet-b0", encoder_weights="imagenet", in_channels=1, classes=1,
+                           activation='sigmoid')
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        state_dict = torch.load(self.modelpath, map_location=torch.device(self.device))
+        self.net.load_state_dict(state_dict)
+        self.net.to(self.device)
 
         self.btn5.setText('predicting')
 
         if self.checkBox.isChecked() is True:
-            self.predict(ori_imgs, ori_filenames)
-        else:
-            self.predict_single(ori_imgs, ori_filenames)
 
+            self.predict()
+        else:
+            self.predict_single()
+
+    """
     def predict(self, ori_imgs, filenames):
         try:
             predict_3ax(ori_imgs, self.model, self.outpath, filenames)
@@ -130,10 +138,11 @@ class Predicter(QWidget):
                 print(e)
 
         self.btn5.setText('predict')
+    """
 
-    def predict_single(self, ori_imgs, filenames):
+    def predict_single(self):
         try:
-            predict_1ax(ori_imgs, self.model, self.outpath, filenames)
+            predict_1ax(self.ori_filenames, self.net, self.outpath, self.size, self.device)
         except Exception as e:
             print(e)
         if self.labelpath != "":
