@@ -50,6 +50,7 @@ class Trainer(QWidget):
 
         self.model = None
         self.worker = None
+        self.stop_training = False
         self.df = pd.DataFrame(columns=['epoch', 'train_loss', 'val_loss'])
 
     def build(self):
@@ -115,15 +116,22 @@ class Trainer(QWidget):
                 im, name='result'
             )
 
+    def delete_worker(self):
+        del self.worker
+        self.worker = None
+        self.btn4.setText('start training')
+        self.df = pd.DataFrame(columns=['epoch', 'train_loss', 'val_loss'])
+
+
     def trainer(self):
         if self.worker:
             if self.worker.is_running:
-                pass
+                self.btn4.setText('stopping...')
+                self.stop_training = True
+                self.worker.send(self.stop_training)
             else:
-                self.worker.start()
-                self.btn4.setText('stop')
+                self.delete_worker()
         else:
-
             csv = self.get_newest_csv()
             names = list(csv[csv['train'] == 'Checked']['filename'])
             if self.checkBox_split.isChecked():
@@ -168,17 +176,14 @@ class Trainer(QWidget):
 
             self.worker = create_worker(train_model, self.modelpath, net, dataloaders_dict, criterion, scheduler, optimizer,
                                            num_epochs=num_epochs)
-            if self.df is None:
-                self.df = pd.DataFrame(columns=['epoch', 'train_loss', 'val_loss'])
             self.worker.started.connect(lambda: print("worker is running..."))
-            self.worker.finished.connect(lambda: print("worker stopped"))
             self.worker.yielded.connect(self.update_layer)
+            self.worker.finished.connect(self.delete_worker)
 
         if self.worker.is_running:
-            self.model.stop_training = True
-            print("stop training requested")
-            self.btn4.setText('start training')
-            self.worker = None
+            self.btn4.setText('stopping...')
+            self.stop_training = True
         else:
             self.worker.start()
+            self.stop_training = False
             self.btn4.setText('stop')

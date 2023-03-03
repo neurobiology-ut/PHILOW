@@ -21,12 +21,11 @@ def train_model(output_dir, net, dataloaders_dict, criterion, scheduler, optimiz
     num_train_imgs = len(dataloaders_dict["train"].dataset)
     if dataloaders_dict["val"] is not None:
         num_val_imgs = len(dataloaders_dict["val"].dataset)
-        eval_loss_best = 1.0 * num_val_imgs
+        eval_loss_best = 2.0 * num_val_imgs
 
 
     # イテレーションカウンタをセット
     iteration = 1
-    logs = []
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -112,8 +111,11 @@ def train_model(output_dir, net, dataloaders_dict, criterion, scheduler, optimiz
                 epoch + 1, epoch_train_loss / num_train_imgs))
             val_loss = None
 
-        yield epoch + 1, epoch_train_loss / num_train_imgs, val_loss
+        stop_training = yield epoch + 1, epoch_train_loss / num_train_imgs, val_loss
         scheduler.step()  # 最適化schedulerの更新
+        print(stop_training)
+        if stop_training:
+            break
 
     # 最後のネットワークを保存する
 

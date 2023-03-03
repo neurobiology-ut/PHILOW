@@ -6,6 +6,17 @@ from .utils import add_margin
 
 
 def pred_large_image(image, net, device, size):
+    """
+    Args:
+        image (PIL image): input image
+        net (torch.nn.Module): model
+        device (str): e.g. 'cpu', 'cuda:0'
+        size (int):  patch size
+
+    Returns:
+        ndarray: predicted probability map
+
+    """
     x, y = image.size
     if max(x, y) > size:
         ps = size  # patch size
