@@ -12,7 +12,6 @@ def pred_large_image(image, net, device, size):
         net (torch.nn.Module): model
         device (str): e.g. 'cpu', 'cuda:0'
         size (int):  patch size
-
     Returns:
         ndarray: predicted probability map
 

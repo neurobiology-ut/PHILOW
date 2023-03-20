@@ -11,6 +11,14 @@ from napari_philow.segmentation.predict import pred_large_image
 
 
 def predict_and_save(dask_arr, net, out_dir_axis, size, device):
+    """
+    Args:
+        dask_arr (dask.array.Array): 2D input image
+        net (torch.nn.Module): model
+        out_dir_axis (str): output directory for the prediction of the current axis
+        size (int): patch size
+        device (str): e.g. 'cpu', 'cuda:0'
+    """
     for i in range(len(dask_arr)):
         pred = 255 * pred_large_image(Image.fromarray(dask_arr[i].compute()), net, device, size)
         io.imsave(os.path.join(out_dir_axis, str(i).zfill(6) + '.png'), pred.astype(np.uint8))
@@ -45,11 +53,11 @@ def predict_3ax(o_path, net, out_dir, size, device):
 def predict_1ax(ori_filenames, net, out_dir, size, device):
     """
     Args:
-        ori_filenames (List[Path]:
-        net:
-        out_dir:
-        size (int):
-        device (str):
+        ori_filenames (List[Path]):
+        net (torch.nn.Module): model
+        out_dir (str): output directory
+        size (int):  patch size
+        device (str): e.g. 'cpu', 'cuda:0'
     """
     os.makedirs(out_dir, exist_ok=True)
     out_dir_merge = os.path.join(out_dir, 'merged_prediction')
