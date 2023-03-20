@@ -104,7 +104,7 @@ class Predicter(QWidget):
         self.ori_filenames = sorted(list(Path(self.opath).glob('./*.png')))
 
         self.net = UnetPlusPlus(encoder_name="efficientnet-b0", encoder_weights="imagenet", in_channels=1, classes=1,
-                           activation='sigmoid')
+                                activation='sigmoid')
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         state_dict = torch.load(self.modelpath, map_location=torch.device(self.device))
         self.net.load_state_dict(state_dict)
@@ -124,20 +124,8 @@ class Predicter(QWidget):
         except Exception as e:
             print(e)
         if self.labelpath != "":
-            try:
-                csv, csv_path = self.get_newest_csv()
-                if csv is None:
-                    pass
-                else:
-                    label_names = [node.filename for node in csv.itertuples() if node.train == "Checked"]
-                    for ln in label_names:
-                        shutil.copy(os.path.join(self.labelpath, ln), os.path.join(self.outpath, 'merged_prediction'))
-                    shutil.copy(str(csv_path), os.path.join(self.outpath, 'merged_prediction'))
-            except Exception as e:
-                print(e)
-
+            self.copy_previous_mask()
         self.btn5.setText('predict')
-
 
     def predict_single(self):
         try:
@@ -145,21 +133,23 @@ class Predicter(QWidget):
         except Exception as e:
             print(e)
         if self.labelpath != "":
-            print('copy previous mask')
-            try:
-                csv, csv_path = self.get_newest_csv()
-                print('find csv', csv_path)
-                if csv is None:
-                    pass
-                else:
-                    label_names = [node.filename for node in csv.itertuples() if node.train == "Checked"]
-                    print(label_names)
-                    for ln in label_names:
-                        print('copy ln')
-                        shutil.copy(os.path.join(self.labelpath, ln), os.path.join(self.outpath, 'merged_prediction'))
-                    shutil.copy(str(csv_path), os.path.join(self.outpath, 'merged_prediction'))
-                    print('csv copied')
-            except Exception as e:
-                print(e)
-
+            self.copy_previous_mask()
         self.btn5.setText('predict')
+
+    def copy_previous_mask(self):
+        print('copy previous mask')
+        try:
+            csv, csv_path = self.get_newest_csv()
+            print('find csv', csv_path)
+            if csv is None:
+                pass
+            else:
+                label_names = [node.filename for node in csv.itertuples() if node.train == "Checked"]
+                print(label_names)
+                for ln in label_names:
+                    print('copy ln')
+                    shutil.copy(os.path.join(self.labelpath, ln), os.path.join(self.outpath, 'merged_prediction'))
+                shutil.copy(str(csv_path), os.path.join(self.outpath, 'merged_prediction'))
+                print('csv copied')
+        except Exception as e:
+            print(e)
