@@ -118,10 +118,9 @@ class Predicter(QWidget):
         else:
             self.predict_single()
 
-    """
-    def predict(self, ori_imgs, filenames):
+    def predict(self):
         try:
-            predict_3ax(ori_imgs, self.model, self.outpath, filenames)
+            predict_3ax(self.opath, self.net, self.outpath, self.size, self.device)
         except Exception as e:
             print(e)
         if self.labelpath != "":
@@ -138,7 +137,7 @@ class Predicter(QWidget):
                 print(e)
 
         self.btn5.setText('predict')
-    """
+
 
     def predict_single(self):
         try:
