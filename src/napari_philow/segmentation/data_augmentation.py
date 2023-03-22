@@ -112,6 +112,13 @@ class RondomRotateShiftScale(object):
 
 class RandomHFlip(object):
     def __call__(self, img, mask):
+        """
+        Args:
+            img (PIL Image or Tensor):
+            mask (PIL Image or Tensor):
+        Returns:
+            Tuple of PIL Image or Tensor: Transformed image and mask
+        """
         if np.random.randint(2):
             functional.hflip(img)
             functional.hflip(mask)
@@ -120,6 +127,13 @@ class RandomHFlip(object):
 
 class RandomVFlip(object):
     def __call__(self, img, mask):
+        """
+        Args:
+            img (PIL Image or Tensor):
+            mask (PIL Image or Tensor):
+        Returns:
+            Tuple of PIL Image or Tensor: Transformed image and mask
+        """
         if np.random.randint(2):
             functional.vflip(img)
             functional.vflip(mask)

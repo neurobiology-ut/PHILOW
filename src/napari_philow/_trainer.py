@@ -60,7 +60,7 @@ class Trainer(QWidget):
         vbox.addWidget(combine_blocks(self.btn3, self.lbl3))
         vbox.addWidget(combine_blocks(self.lbl4, self.epoch))
         vbox.addWidget(self.btn4)
-        #vbox.addWidget(self.checkBox)
+        # vbox.addWidget(self.checkBox)
         vbox.addWidget(self.checkBox_split)
 
         self.setLayout(vbox)
@@ -100,7 +100,7 @@ class Trainer(QWidget):
         if self.checkBox_split.isChecked():
             plt.plot(list(self.df['epoch']), list(self.df['val_loss']), label='val_loss')
         plt.xlim(0, len(self.df))
-        #plt.ylim(0, 1)
+        # plt.ylim(0, 1)
         plt.legend()
         buf = IO.BytesIO()
         plt.savefig(buf, format='png')
@@ -122,7 +122,6 @@ class Trainer(QWidget):
         self.btn4.setText('start training')
         self.df = pd.DataFrame(columns=['epoch', 'train_loss', 'val_loss'])
 
-
     def trainer(self):
         if self.worker:
             if self.worker.is_running:
@@ -134,9 +133,10 @@ class Trainer(QWidget):
         else:
             csv = self.get_newest_csv()
             names = list(csv[csv['train'] == 'Checked']['filename'])
+            test_names = list(csv[csv['train'] != 'Checked']['filename'])
             if self.checkBox_split.isChecked():
                 np.random.shuffle(names)
-                split_index = 9*len(names)//10
+                split_index = 9 * len(names) // 10
                 train_names = names[0: split_index]
                 val_names = names[split_index:]
             else:
@@ -144,7 +144,7 @@ class Trainer(QWidget):
 
             w, h = Image.open(os.path.join(self.opath, names[0])).size
 
-            batch_size = min(math.ceil(len(train_names)/10), 4)
+            batch_size = min(math.ceil(len(train_names) / 10), 4)
             print('batchsize = ', batch_size)
 
             train_dataset = PHILOWDataset(self.opath, self.labelpath, train_names, 'train', ImageTransform(512),
@@ -154,7 +154,7 @@ class Trainer(QWidget):
 
             if self.checkBox_split.isChecked():
                 val_dataset = PHILOWDataset(self.opath, self.labelpath, val_names, 'val', ImageTransform(512),
-                                          multiplier=math.ceil(max(w, h) / 512))
+                                            multiplier=math.ceil(max(w, h) / 512))
                 val_dataloader = data.DataLoader(
                     val_dataset, batch_size=batch_size, shuffle=False, num_workers=max(1, os.cpu_count() - 2))
             else:
@@ -174,8 +174,9 @@ class Trainer(QWidget):
 
             criterion = DiceBCELoss()
 
-            self.worker = create_worker(train_model, self.modelpath, net, dataloaders_dict, criterion, scheduler, optimizer,
-                                           num_epochs=num_epochs)
+            self.worker = create_worker(train_model, self.modelpath, net, dataloaders_dict, criterion, scheduler,
+                                        optimizer,
+                                        num_epochs=num_epochs)
             self.worker.started.connect(lambda: print("worker is running..."))
             self.worker.yielded.connect(self.update_layer)
             self.worker.finished.connect(self.delete_worker)
