@@ -6,6 +6,7 @@ import numpy as np
 from PIL import Image
 from skimage import io
 from tifffile import natural_sorted
+from tqdm import tqdm
 
 from napari_philow.segmentation.predict import pred_large_image
 
@@ -13,7 +14,7 @@ from napari_philow.segmentation.predict import pred_large_image
 def predict_and_save(dask_arr, net, out_dir_axis, size, device):
     """
     Args:
-        dask_arr (dask.array.Array): 2D input image
+        dask_arr (dask.array.Array): 3D input image
         net (torch.nn.Module): model
         out_dir_axis (str): output directory for the prediction of the current axis
         size (int): patch size
@@ -25,14 +26,27 @@ def predict_and_save(dask_arr, net, out_dir_axis, size, device):
 
 
 def predict_3ax(o_path, net, out_dir, size, device):
+    """
+    predict 3 axes (TAP) and merge the prediction
+    Args:
+        o_path (str): original image directory path
+        net (torch.nn.Module): model
+        out_dir (str): output directory
+        size (int): patch size
+        device (str): e.g. 'cpu', 'cuda:0'
+    """
     os.makedirs(out_dir, exist_ok=True)
     out_dir_merge = os.path.join(out_dir, 'merged_prediction')
     os.makedirs(out_dir_merge, exist_ok=True)
     os.makedirs(f"{out_dir_merge}_raw", exist_ok=True)
     filenames = natural_sorted(glob.glob(os.path.join(o_path, '*.png')))
     xy_imgs = dask_image.imread.imread(os.path.join(o_path, '*.png'))
+    print(f"xy_imgs.shape: {xy_imgs.shape}")
     yz_imgs = xy_imgs.transpose(2, 0, 1)
     zx_imgs = xy_imgs.transpose(1, 2, 0)
+    os.makedirs(os.path.join(out_dir, 'pred_xy'), exist_ok=True)
+    os.makedirs(os.path.join(out_dir, 'pred_yz'), exist_ok=True)
+    os.makedirs(os.path.join(out_dir, 'pred_zx'), exist_ok=True)
     predict_and_save(xy_imgs, net, os.path.join(out_dir, 'pred_xy'), size, device)
     predict_and_save(yz_imgs, net, os.path.join(out_dir, 'pred_yz'), size, device)
     predict_and_save(zx_imgs, net, os.path.join(out_dir, 'pred_zx'), size, device)
@@ -52,6 +66,7 @@ def predict_3ax(o_path, net, out_dir, size, device):
 
 def predict_1ax(ori_filenames, net, out_dir, size, device):
     """
+    predict 1 axis and merge the prediction
     Args:
         ori_filenames (List[Path]):
         net (torch.nn.Module): model

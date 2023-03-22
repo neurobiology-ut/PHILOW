@@ -8,7 +8,7 @@ from magicgui import magicgui
 from qtpy.QtWidgets import QWidget, QVBoxLayout, QPushButton, QSizePolicy, QLabel, QFileDialog, QCheckBox
 from skimage import io
 
-from napari_philow._utils import combine_blocks, load_images, load_saved_masks
+from napari_philow._utils import combine_blocks, load_images, load_saved_masks, save_masks
 
 
 class Selector(QWidget):
@@ -67,7 +67,6 @@ class Selector(QWidget):
             self.select_path = f_name
             self.lbl3.setText(self.select_path)
 
-
     def launch_napari_selector(self):
         images = load_images(self.opath)
         labels = load_saved_masks(self.modpath)
@@ -82,7 +81,6 @@ class Selector(QWidget):
 
         self._viewer.window.remove_dock_widget(self)
         self.launch_selector(images, labels, selects)
-
 
     def launch_selector(self, original, label, select):
         global layer1
@@ -107,7 +105,7 @@ class Selector(QWidget):
         self._viewer.add_labels(base_label, name='base', color={1: 'red', 2: 'blue', 3: 'green'})
         self._viewer.add_labels(only_label, name="selected_objects", color={1: 'blue', 2: 'green', 3: 'red'})
 
-        # culc label
+        # calc label
         labels_imgs = ndmeasure.label((label == 1).astype(int))
         layer1 = self._viewer.layers[1]
         layer2 = self._viewer.layers[2]
@@ -169,20 +167,20 @@ class Selector(QWidget):
         self._viewer.window.add_dock_widget(mod_dirpicker, area='bottom')
 
         @magicgui(dirname={"mode": "d"})
-        def select_dirpicker(dirname=Path(select_path)):
+        def select_dirpicker(dirname=Path(self.select_path)):
             """Take a filename and do something with it."""
             print("The filename is:", dirname)
             return dirname
 
         # gui3 = select_dirpicker.Gui(show=True)
         # view1.window.add_dock_widget(gui3, area='bottom')
-        view1.window.add_dock_widget(select_dirpicker, area='bottom')
+        self._viewer.window.add_dock_widget(select_dirpicker, area='bottom')
 
         @magicgui(call_button="save")
         def saver():
-            print("The directory is:", select_path)
-            return utils.save_masks(layer1.data, mod_path), utils.save_masks(layer2.data, select_path)
+            print("The directory is:", self.select_path)
+            return save_masks(layer1.data, self.mod_path), save_masks(layer2.data, self.select_path)
 
         # gui4 = saver.Gui(show=True)
         # view1.window.add_dock_widget(gui4, area='bottom')
-        view1.window.add_dock_widget(saver, area='bottom')
+        self._view.window.add_dock_widget(saver, area='bottom')

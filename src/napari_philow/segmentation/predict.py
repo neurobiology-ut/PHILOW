@@ -7,6 +7,7 @@ from .utils import add_margin
 
 def pred_large_image(image, net, device, size):
     """
+    predict large image
     Args:
         image (PIL image): input image
         net (torch.nn.Module): model
@@ -17,10 +18,12 @@ def pred_large_image(image, net, device, size):
 
     """
     x, y = image.size
+    print(f"image size: x={x}, y={y}")
     if max(x, y) > size:
         ps = size  # patch size
         ds = ps // 2  # d size
         ms = ds // 2  # margin size
+        print(f"patch size: {ps}, d ssize: {ds}, margin ssize: {ms}")
         by = int(y % ps / 2) + ms
         bx = int(x % ps / 2) + ms
         temp_image = add_margin(image, by, bx, by, bx, 'black')
@@ -38,4 +41,4 @@ def pred_large_image(image, net, device, size):
     else:
         temp = functional.to_tensor(image).unsqueeze(0).to(device)
         pred = net(temp).cpu().detach().numpy()
-        return pred
+        return pred[0, 0, :, :]
