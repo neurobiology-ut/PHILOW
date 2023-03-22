@@ -4,6 +4,7 @@ from pathlib import Path
 import dask.array as da
 import numpy as np
 from dask_image import ndmeasure
+from skimage import measure
 from magicgui import magicgui
 from qtpy.QtWidgets import QWidget, QVBoxLayout, QPushButton, QSizePolicy, QLabel, QFileDialog, QCheckBox
 from skimage import io
@@ -108,7 +109,8 @@ class Selector(QWidget):
         self._viewer.add_labels(only_label, name="selected_objects", color={1: 'blue', 2: 'green', 3: 'red'})
 
         # calc label
-        labels_imgs, _ = ndmeasure.label((label == 1).astype(int))
+        # labels_imgs, _ = ndmeasure.label((label == 1).astype(int))
+        labels_imgs = measure.label((label == 1).astype(int))
         layer1 = self._viewer.layers[1]
         layer2 = self._viewer.layers[2]
 
@@ -122,13 +124,12 @@ class Selector(QWidget):
                 global only_label
                 q_point = np.round(self._viewer.cursor.position).astype(int)
                 print(q_point)
-                print(labels_imgs.shape)
                 target_label = labels_imgs[q_point[0]][q_point[1]][q_point[2]]
                 print("select_label : ", target_label, "select_point : ", q_point)
                 if target_label:
                     only_label = np.where(labels_imgs == target_label, 1, only_label)
                     base_label = np.where(labels_imgs == target_label, 0, base_label)
-                    self._viewerlayers[1].data = base_label
+                    self._viewer.layers[1].data = base_label
                     self._viewer.layers[2].data = only_label
                     print('Selected!')
                 return True
@@ -145,10 +146,11 @@ class Selector(QWidget):
             def deselect_event(event):
                 global base_label
                 global only_label
-                w_point = np.round(self._viewer.cursor.position.astype(int))
-                print("select_label : ", labels_imgs[w_point[0], w_point[1], w_point[2]], "select_point : ", w_point)
-                if labels_imgs[w_point[0], w_point[1], w_point[2]]:
-                    target_label = labels_imgs[w_point[0], w_point[1], w_point[2]]
+                w_point = np.round(self._viewer.cursor.position).astype(int)
+                print(w_point)
+                target_label = labels_imgs[w_point[0]][w_point[1]][w_point[2]]
+                print("select_label : ", target_label, "select_point : ", w_point)
+                if target_label:
                     base_label = np.where(labels_imgs == target_label, 1, base_label)
                     only_label = np.where(labels_imgs == target_label, 0, only_label)
                     self._viewer.layers[1].data = base_label
