@@ -23,7 +23,6 @@ def train_model(output_dir, net, dataloaders_dict, criterion, scheduler, optimiz
         num_val_imgs = len(dataloaders_dict["val"].dataset)
         eval_loss_best = 2.0 * num_val_imgs
 
-
     # イテレーションカウンタをセット
     iteration = 1
 
@@ -106,12 +105,19 @@ def train_model(output_dir, net, dataloaders_dict, criterion, scheduler, optimiz
             else:
                 pass
             val_loss = epoch_val_loss / num_val_imgs
+            stop_training = yield epoch + 1, epoch_train_loss / num_train_imgs, val_loss, (imges.cpu().detach().numpy(), masks.cpu().detach().numpy(), outputs.cpu().detach().numpy())
         else:
-            print('epoch {} || Epoch_TRAIN_Loss:{:.4f}'.format(
-                epoch + 1, epoch_train_loss / num_train_imgs))
             val_loss = None
+            if dataloaders_dict['test'] is not None:
+                for imges, masks in dataloaders_dict['test']:
+                    imges = imges.to(device)
+                    outputs = net(imges)
+                    break
+                stop_training = yield epoch + 1, epoch_train_loss / num_train_imgs, val_loss, (imges.cpu().detach().numpy(), None, outputs.cpu().detach().numpy())
+            else:
+                stop_training = yield epoch + 1, epoch_train_loss / num_train_imgs, val_loss, None
+            print('epoch {} || Epoch_TRAIN_Loss:{:.4f}'.format(epoch + 1, epoch_train_loss / num_train_imgs))
 
-        stop_training = yield epoch + 1, epoch_train_loss / num_train_imgs, val_loss
         scheduler.step()  # 最適化schedulerの更新
         print(stop_training)
         if stop_training:
@@ -120,5 +126,3 @@ def train_model(output_dir, net, dataloaders_dict, criterion, scheduler, optimiz
     # 最後のネットワークを保存する
 
     torch.save(net.state_dict(), f'{output_dir}/unet_' + str(epoch + 1) + '.pth')
-
-

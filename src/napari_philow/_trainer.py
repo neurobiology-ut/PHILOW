@@ -131,9 +131,11 @@ class Trainer(QWidget):
             else:
                 self.delete_worker()
         else:
+            self.df = pd.DataFrame(columns=['epoch', 'train_loss', 'val_loss'])
             csv = self.get_newest_csv()
             names = list(csv[csv['train'] == 'Checked']['filename'])
-            test_names = list(csv[csv['train'] != 'Checked']['filename'])
+            test_names = [name for name in list(csv[csv['train'] != 'Checked']['filename']) if
+                          os.path.isfile(os.path.join(self.opath, name))]
             if self.checkBox_split.isChecked():
                 np.random.shuffle(names)
                 split_index = 9 * len(names) // 10
@@ -151,6 +153,11 @@ class Trainer(QWidget):
                                           multiplier=math.ceil(max(w, h) / 512))
             train_dataloader = data.DataLoader(
                 train_dataset, batch_size=batch_size, shuffle=True, num_workers=max(1, os.cpu_count() - 2))
+            if len(test_names) == 0:
+                test_dataset = PHILOWDataset(self.opath, self.labelpath, test_names, 'val', ImageTransform(512))
+                test_dataloader = data.DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=1)
+            else:
+                test_dataloader = None
 
             if self.checkBox_split.isChecked():
                 val_dataset = PHILOWDataset(self.opath, self.labelpath, val_names, 'val', ImageTransform(512),
@@ -161,7 +168,7 @@ class Trainer(QWidget):
                 val_dataloader = None
 
             # 辞書オブジェクトにまとめる
-            dataloaders_dict = {"train": train_dataloader, "val": val_dataloader}
+            dataloaders_dict = {"train": train_dataloader, "val": val_dataloader, "test": test_dataloader}
 
             net = UnetPlusPlus(encoder_name="efficientnet-b0", encoder_weights="imagenet", in_channels=1, classes=1,
                                activation='sigmoid')

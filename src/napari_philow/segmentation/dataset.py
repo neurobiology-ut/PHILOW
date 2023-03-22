@@ -34,7 +34,10 @@ class PHILOWDataset(Dataset):
     def pull_item(self, index):
         # read data
         img = Image.open(os.path.join(self.images_dir, str(self.names[index]))).convert("L")
-        mask = Image.open(os.path.join(self.labels_dir, str(self.names[index]))).convert("L")
+        if self.labels_dir is not None:
+            mask = Image.open(os.path.join(self.labels_dir, str(self.names[index]))).convert("L")
+        else:
+            mask = Image.new("L", img.size, color=0)
 
         # 3. 前処理を実施
         img, mask = self.transform(self.phase, img, mask)
