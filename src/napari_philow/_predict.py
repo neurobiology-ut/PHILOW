@@ -20,7 +20,7 @@ def predict_and_save(dask_arr, net, out_dir_axis, size, device):
         size (int): patch size
         device (str): e.g. 'cpu', 'cuda:0'
     """
-    for i in range(len(dask_arr)):
+    for i in tqdm(range(len(dask_arr))):
         pred = 255 * pred_large_image(Image.fromarray(dask_arr[i].compute()), net, device, size)
         io.imsave(os.path.join(out_dir_axis, str(i).zfill(6) + '.png'), pred.astype(np.uint8))
 
