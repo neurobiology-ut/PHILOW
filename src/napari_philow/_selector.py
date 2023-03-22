@@ -110,7 +110,7 @@ class Selector(QWidget):
 
         # calc label
         # labels_imgs, _ = ndmeasure.label((label == 1).astype(int))
-        labels_imgs = measure.label((label == 1).astype(int))
+        labels_imgs = measure.label((label == 1).astype(int), connectivity=1)
         layer1 = self._viewer.layers[1]
         layer2 = self._viewer.layers[2]
 
