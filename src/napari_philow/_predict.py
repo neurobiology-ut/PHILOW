@@ -53,15 +53,17 @@ def predict_3ax(o_path, net, out_dir, size, device):
     pred_xy_imgs = dask_image.imread.imread(os.path.join(out_dir, 'pred_xy', '*png'))
     pred_yz_imgs = dask_image.imread.imread(os.path.join(out_dir, 'pred_yz', '*png'))
     pred_zx_imgs = dask_image.imread.imread(os.path.join(out_dir, 'pred_zx', '*png'))
+    print(pred_xy_imgs.shape)
+    print(pred_yz_imgs.shape)
+    print(pred_zx_imgs.shape)
     pred_yz_imgs_xy = pred_yz_imgs.transpose(1, 2, 0)
     pred_zx_imgs_xy = pred_zx_imgs.transpose(2, 0, 1)
-    for i in range(len(pred_xy_imgs)):
-        mito_img_ave = pred_xy_imgs[i] // 3 + pred_yz_imgs_xy[i] // 3 + pred_zx_imgs_xy[i] // 3
-        mito_img_ave = mito_img_ave.compyte()
+    for i in tqdm(range(len(pred_xy_imgs))):
+        mito_img_ave = pred_xy_imgs[i].compute() // 3 + pred_yz_imgs_xy[i].compute() // 3 + pred_zx_imgs_xy[i].compute() // 3
         img = np.where(mito_img_ave >= 127, 1, 0)
-        io.imsave(f'{out_dir_merge}/{filenames[i]}', img.astype(np.uint8))
+        io.imsave(f'{out_dir_merge}/{os.path.basename(filenames[i])}', img.astype(np.uint8))
         img_ = np.where(mito_img_ave >= 127, mito_img_ave, 0)
-        io.imsave(f'{out_dir_merge}_raw/{filenames[i]}', img_.astype(np.uint8))
+        io.imsave(f'{out_dir_merge}_raw/{os.path.basename(filenames[i])}', img_.astype(np.uint8))
 
 
 def predict_1ax(ori_filenames, net, out_dir, size, device):

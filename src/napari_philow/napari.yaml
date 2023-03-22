@@ -11,6 +11,9 @@ contributions:
   - id: napari-PHILOW.Predicter
     title: Create Predicter
     python_name: napari_philow._prediction:Predicter
+  - id: napari-PHILOW.Selector
+    title: Create Selector
+    python_name: napari_philow._selector:Selector
   widgets:
   - command: napari-PHILOW.AnnotationMode
     display_name: Annotation Mode
@@ -18,3 +21,5 @@ contributions:
     display_name: Trainer
   - command: napari-PHILOW.Predicter
     display_name: Predicter
+  - command: napari-PHILOW.Selector
+    display_name: Selector

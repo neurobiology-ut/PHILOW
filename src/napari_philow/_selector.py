@@ -30,7 +30,7 @@ class Selector(QWidget):
 
         self.btn4 = QPushButton('launch napari', self)
         self.btn4.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.btn4.clicked.connect(self.launch)
+        self.btn4.clicked.connect(self.launch_napari_selector)
         self.lbl = QLabel('original images dir', self)
         self.lbl2 = QLabel('original label dir', self)
         self.lbl3 = QLabel('selected label dir', self)
@@ -69,15 +69,17 @@ class Selector(QWidget):
 
     def launch_napari_selector(self):
         images = load_images(self.opath)
-        labels = load_saved_masks(self.modpath)
-        if not os.path.exists(self.select_path):
-            selects = da.zeros_like(images)
+        labels, _ = load_saved_masks(self.modpath)
+        if self.select_path == "":
+            self.select_path = os.path.join(self.modpath + '_selected')
             os.makedirs(self.select_path, exist_ok=True)
+        if len(os.listdir(self.select_path)) == 0:
+            selects = da.zeros_like(images)
             filenames = [fn.name for fn in sorted(list(Path(self.opath).glob('./*png')))]
             for i in range(len(selects)):
-                io.imsave(os.path.join(self.select_path, str(i).zfill(4) + '.png'), selects[i], dtype=np.uint8)
+                io.imsave(os.path.join(self.select_path, str(i).zfill(4) + '.png'), selects[i])
         else:
-            selects = load_saved_masks(self.select_path)
+            selects, _ = load_saved_masks(self.select_path)
 
         self._viewer.window.remove_dock_widget(self)
         self.launch_selector(images, labels, selects)
@@ -101,12 +103,12 @@ class Selector(QWidget):
             del layer2
         except NameError:
             pass
-        self._viewer.view_image(images_original, contrast_limits=[0, 255])
+        image_layer = self._viewer.add_image(images_original, contrast_limits=[0, 255])
         self._viewer.add_labels(base_label, name='base', color={1: 'red', 2: 'blue', 3: 'green'})
         self._viewer.add_labels(only_label, name="selected_objects", color={1: 'blue', 2: 'green', 3: 'red'})
 
         # calc label
-        labels_imgs = ndmeasure.label((label == 1).astype(int))
+        labels_imgs, _ = ndmeasure.label((label == 1).astype(int))
         layer1 = self._viewer.layers[1]
         layer2 = self._viewer.layers[2]
 
@@ -118,10 +120,12 @@ class Selector(QWidget):
             def select_event(event):
                 global base_label
                 global only_label
-                q_point = np.round(event.position).astype(int)
-                print("select_label : ", labels_imgs[q_point[0], q_point[1], q_point[2]], "select_point : ", q_point)
-                if labels_imgs[q_point[0], q_point[1], q_point[2]]:
-                    target_label = labels_imgs[q_point[0], q_point[1], q_point[2]]
+                q_point = np.round(self._viewer.cursor.position).astype(int)
+                print(q_point)
+                print(labels_imgs.shape)
+                target_label = labels_imgs[q_point[0]][q_point[1]][q_point[2]]
+                print("select_label : ", target_label, "select_point : ", q_point)
+                if target_label:
                     only_label = np.where(labels_imgs == target_label, 1, only_label)
                     base_label = np.where(labels_imgs == target_label, 0, base_label)
                     self._viewerlayers[1].data = base_label
@@ -141,7 +145,7 @@ class Selector(QWidget):
             def deselect_event(event):
                 global base_label
                 global only_label
-                w_point = np.round(event.position).astype(int)
+                w_point = np.round(self._viewer.cursor.position.astype(int))
                 print("select_label : ", labels_imgs[w_point[0], w_point[1], w_point[2]], "select_point : ", w_point)
                 if labels_imgs[w_point[0], w_point[1], w_point[2]]:
                     target_label = labels_imgs[w_point[0], w_point[1], w_point[2]]
@@ -156,24 +160,20 @@ class Selector(QWidget):
         def main(layer, event):
             deselect_target(layer, event)
 
-        @magicgui(dirname={"mode": "d"})
-        def mod_dirpicker(dirname=Path(self.mod_path)):
+        @magicgui(dirname={"mode": "d"}, call_button=False)
+        def mod_dirpicker(dirname=Path(self.modpath)):
             """Take a filename and do something with it."""
             print("The filename is:", dirname)
             return dirname
 
-        # gui1 = mod_dirpicker.Gui(show=True)
-        # view1.window.add_dock_widget(gui1, area='bottom')
         self._viewer.window.add_dock_widget(mod_dirpicker, area='bottom')
 
-        @magicgui(dirname={"mode": "d"})
+        @magicgui(dirname={"mode": "d"}, call_button=False)
         def select_dirpicker(dirname=Path(self.select_path)):
             """Take a filename and do something with it."""
             print("The filename is:", dirname)
             return dirname
 
-        # gui3 = select_dirpicker.Gui(show=True)
-        # view1.window.add_dock_widget(gui3, area='bottom')
         self._viewer.window.add_dock_widget(select_dirpicker, area='bottom')
 
         @magicgui(call_button="save")
@@ -183,4 +183,4 @@ class Selector(QWidget):
 
         # gui4 = saver.Gui(show=True)
         # view1.window.add_dock_widget(gui4, area='bottom')
-        self._view.window.add_dock_widget(saver, area='bottom')
+        self._viewer.window.add_dock_widget(saver, area='bottom')

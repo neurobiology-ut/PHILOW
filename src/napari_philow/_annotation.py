@@ -133,7 +133,6 @@ class AnnotationMode(QWidget):
             print("The filename is:", dirname)
             return dirname
 
-        # gui = dirpicker.Gui(show=True)
         self._viewer.window.add_dock_widget(dirpicker, area='bottom')
 
         @magicgui(call_button="save")
@@ -143,8 +142,6 @@ class AnnotationMode(QWidget):
             print("The directory is:", out_dir)
             return save_masks(layer1.data, out_dir, self.filenames)
 
-        # gui2 = saver.Gui(show=True)
-        # self._viewer.window.add_dock_widget(gui2, area='bottom')
         self._viewer.window.add_dock_widget(saver, area='bottom')
 
         dmg = Datamanager()
@@ -193,7 +190,7 @@ class AnnotationMode(QWidget):
         def update_canvas_canvas(layer, event):
             if 'shift' in event.modifiers:
                 try:
-                    m_point = np.round(layer.position).astype(int)
+                    m_point = np.round(self._viewer.cursor.position).astype(int)
                     print(m_point)
                     crop_big = crop_img([m_point[0], m_point[1], m_point[2]], layer)
                     xy_axes.imshow(crop_big[50], 'gray')
