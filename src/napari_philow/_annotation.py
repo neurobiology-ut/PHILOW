@@ -182,8 +182,6 @@ class AnnotationMode(QWidget):
             # canvas.figure.tight_layout()
             canvas.figure.subplots_adjust(left=0, bottom=0.1, right=1, top=0.95, wspace=0, hspace=0.4)
 
-        canvas.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Maximum)
-
         self._viewer.window.add_dock_widget(canvas, area='right')
 
         @layer.mouse_drag_callbacks.append

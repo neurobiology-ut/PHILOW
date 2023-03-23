@@ -4,6 +4,8 @@ import os
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
 import numpy as np
 import pandas as pd
 from PIL import Image
@@ -46,11 +48,22 @@ class Trainer(QWidget):
         self.checkBox = QCheckBox("Resize to 256x256?")
         self.checkBox_split = QCheckBox("Split and create validation data from training data?")
         self.checkBox.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+
+        with plt.style.context('dark_background'):
+            self.canvas = FigureCanvas(Figure(figsize=(3, 5)))
+            self.canvas.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Maximum)
+            self.axes = self.canvas.figure.subplots()
+
         self.build()
 
         self.model = None
         self.worker = None
         self.stop_training = False
+
+        self.image_layer = None
+        self.label_layer = None
+        self.prediction_layer = None
+
         self.df = pd.DataFrame(columns=['epoch', 'train_loss', 'val_loss'])
 
     def build(self):
@@ -59,9 +72,10 @@ class Trainer(QWidget):
         vbox.addWidget(combine_blocks(self.btn2, self.lbl2))
         vbox.addWidget(combine_blocks(self.btn3, self.lbl3))
         vbox.addWidget(combine_blocks(self.lbl4, self.epoch))
-        vbox.addWidget(self.btn4)
         # vbox.addWidget(self.checkBox)
         vbox.addWidget(self.checkBox_split)
+        vbox.addWidget(self.btn4)
+        vbox.addWidget(self.canvas)
 
         self.setLayout(vbox)
         self.show()
@@ -93,34 +107,44 @@ class Trainer(QWidget):
         return csv
 
     def update_layer(self, value):
+        self.axes.clear()
         self.df.loc[len(self.df)] = {'epoch': value[0], 'train_loss': value[1], 'val_loss': value[2]}
         self.df.to_csv(os.path.join(self.modelpath, "train_log.csv"))
-        plt.figure(figsize=(5, 5))
-        plt.plot(list(self.df['epoch']), list(self.df['train_loss']), label='train_loss')
+        self.axes.plot(list(self.df['epoch']), list(self.df['train_loss']), label='train_loss')
         if self.checkBox_split.isChecked():
-            plt.plot(list(self.df['epoch']), list(self.df['val_loss']), label='val_loss')
-        plt.xlim(0, len(self.df))
+            self.axes.plot(list(self.df['epoch']), list(self.df['val_loss']), label='val_loss')
+        self.axes.set_xlim(0, len(self.df))
         # plt.ylim(0, 1)
-        plt.legend()
-        buf = IO.BytesIO()
-        plt.savefig(buf, format='png')
-        plt.close()
-        buf.seek(0)
-        im = Image.open(buf)
-        im = np.array(im)
-        buf.close()
-        try:
-            self._viewer.layers['result'].data = im
-        except KeyError:
-            self._viewer.add_image(
-                im, name='result'
-            )
+        self.axes.legend()
+        self.canvas.draw_idle()
+        self.canvas.flush_events()
+
+        image_mask_pred = value[3]
+
+        if image_mask_pred is None:
+            return
+
+        if self.image_layer is None:
+            self.image_layer = self._viewer.add_image(image_mask_pred[0], name='image')
+        else:
+            self.image_layer.data = image_mask_pred[0]
+        if self.label_layer is None:
+            if image_mask_pred[1] is not None:
+                self.label_layer = self._viewer.add_labels(1*(image_mask_pred[1] > 0.5), name='label', color={1: 'green'}, blending='additive')
+        else:
+            if image_mask_pred[1] is not None:
+                self.label_layer.data = 1*(image_mask_pred[1] > 0.5)
+        if self.prediction_layer is None:
+            if image_mask_pred[2] is not None:
+                self.prediction_layer = self._viewer.add_labels(1*(image_mask_pred[2] > 0.5), name='prediction', color={1: 'magenta'}, blending='additive')
+        else:
+            if image_mask_pred[2] is not None:
+                self.prediction_layer.data = 1*(image_mask_pred[2] > 0.5)
 
     def delete_worker(self):
         del self.worker
         self.worker = None
         self.btn4.setText('start training')
-        self.df = pd.DataFrame(columns=['epoch', 'train_loss', 'val_loss'])
 
     def trainer(self):
         if self.worker:
@@ -136,6 +160,7 @@ class Trainer(QWidget):
             names = list(csv[csv['train'] == 'Checked']['filename'])
             test_names = [name for name in list(csv[csv['train'] != 'Checked']['filename']) if
                           os.path.isfile(os.path.join(self.opath, name))]
+            print(test_names)
             if self.checkBox_split.isChecked():
                 np.random.shuffle(names)
                 split_index = 9 * len(names) // 10
@@ -153,9 +178,9 @@ class Trainer(QWidget):
                                           multiplier=math.ceil(max(w, h) / 512))
             train_dataloader = data.DataLoader(
                 train_dataset, batch_size=batch_size, shuffle=True, num_workers=max(1, os.cpu_count() - 2))
-            if len(test_names) == 0:
+            if len(test_names) != 0:
                 test_dataset = PHILOWDataset(self.opath, self.labelpath, test_names, 'val', ImageTransform(512))
-                test_dataloader = data.DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=1)
+                test_dataloader = data.DataLoader(test_dataset, batch_size=1, shuffle=True, num_workers=1)
             else:
                 test_dataloader = None
 
@@ -163,12 +188,14 @@ class Trainer(QWidget):
                 val_dataset = PHILOWDataset(self.opath, self.labelpath, val_names, 'val', ImageTransform(512),
                                             multiplier=math.ceil(max(w, h) / 512))
                 val_dataloader = data.DataLoader(
-                    val_dataset, batch_size=batch_size, shuffle=False, num_workers=max(1, os.cpu_count() - 2))
+                    val_dataset, batch_size=batch_size, shuffle=True, num_workers=max(1, os.cpu_count() - 2))
             else:
                 val_dataloader = None
 
             # 辞書オブジェクトにまとめる
             dataloaders_dict = {"train": train_dataloader, "val": val_dataloader, "test": test_dataloader}
+
+            print(dataloaders_dict)
 
             net = UnetPlusPlus(encoder_name="efficientnet-b0", encoder_weights="imagenet", in_channels=1, classes=1,
                                activation='sigmoid')
