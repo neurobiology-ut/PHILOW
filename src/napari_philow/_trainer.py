@@ -113,9 +113,11 @@ class Trainer(QWidget):
         self.axes.plot(list(self.df['epoch']), list(self.df['train_loss']), label='train_loss')
         if self.checkBox_split.isChecked():
             self.axes.plot(list(self.df['epoch']), list(self.df['val_loss']), label='val_loss')
-        self.axes.set_xlim(0, len(self.df))
+        self.axes.set_xlim(0, len(self.df)+1)
         # plt.ylim(0, 1)
         self.axes.legend()
+        self.axes.tick_params(axis='x', colors='white')
+        self.axes.tick_params(axis='y', colors='white')
         self.canvas.draw_idle()
         self.canvas.flush_events()
 
