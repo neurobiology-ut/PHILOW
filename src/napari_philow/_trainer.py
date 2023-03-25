@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import torch
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import numpy as np
@@ -28,6 +29,7 @@ class Trainer(QWidget):
         self.opath = ""
         self.labelpath = ""
         self.modelpath = ""
+        self.prev_modelpath = ""
         self.btn1 = QPushButton('open', self)
         self.btn1.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.btn1.clicked.connect(self.show_dialog_o)
@@ -37,13 +39,17 @@ class Trainer(QWidget):
         self.btn3 = QPushButton('open', self)
         self.btn3.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.btn3.clicked.connect(self.show_dialog_model)
-        self.btn4 = QPushButton('start training', self)
+        self.btn4 = QPushButton('open', self)
         self.btn4.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.btn4.clicked.connect(self.trainer)
+        self.btn4.clicked.connect(self.show_dialog_prev_model)
+        self.btn5 = QPushButton('start training', self)
+        self.btn5.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.btn5.clicked.connect(self.trainer)
         self.lbl = QLabel('original dir', self)
         self.lbl2 = QLabel('label dir', self)
         self.lbl3 = QLabel('model output dir', self)
-        self.lbl4 = QLabel('epochs', self)
+        self.lbl4 = QLabel('(optional) previous model path (.pth)', self)
+        self.lbl5 = QLabel('epochs', self)
         self.epoch = QSpinBox(maximum=1000, value=400)
         self.checkBox = QCheckBox("Resize to 256x256?")
         self.checkBox_split = QCheckBox("Split and create validation data from training data?")
@@ -71,10 +77,11 @@ class Trainer(QWidget):
         vbox.addWidget(combine_blocks(self.btn1, self.lbl))
         vbox.addWidget(combine_blocks(self.btn2, self.lbl2))
         vbox.addWidget(combine_blocks(self.btn3, self.lbl3))
-        vbox.addWidget(combine_blocks(self.lbl4, self.epoch))
+        vbox.addWidget(combine_blocks(self.btn4, self.lbl4))
+        vbox.addWidget(combine_blocks(self.lbl5, self.epoch))
         # vbox.addWidget(self.checkBox)
         vbox.addWidget(self.checkBox_split)
-        vbox.addWidget(self.btn4)
+        vbox.addWidget(self.btn5)
         vbox.addWidget(self.canvas)
 
         self.setLayout(vbox)
@@ -101,6 +108,13 @@ class Trainer(QWidget):
             self.modelpath = f_name
             self.lbl3.setText(self.modelpath)
 
+    def show_dialog_prev_model(self):
+        default_path = max(self.opath, self.labelpath, os.path.expanduser('~'))
+        f_name, _ = QFileDialog.getOpenFileName(self, 'Select weight file', default_path)
+        if f_name:
+            self.prev_modelpath = f_name
+            self.lbl4.setText(self.prev_modelpath)
+
     def get_newest_csv(self):
         csvs = sorted(list(Path(self.labelpath).glob('./*csv')))
         csv = pd.read_csv(str(csvs[-1]), index_col=0)
@@ -113,7 +127,7 @@ class Trainer(QWidget):
         self.axes.plot(list(self.df['epoch']), list(self.df['train_loss']), label='train_loss')
         if self.checkBox_split.isChecked():
             self.axes.plot(list(self.df['epoch']), list(self.df['val_loss']), label='val_loss')
-        self.axes.set_xlim(0, len(self.df)+1)
+        self.axes.set_xlim(0, len(self.df) + 1)
         # plt.ylim(0, 1)
         self.axes.legend()
         self.axes.tick_params(axis='x', colors='white')
@@ -132,26 +146,28 @@ class Trainer(QWidget):
             self.image_layer.data = image_mask_pred[0]
         if self.label_layer is None:
             if image_mask_pred[1] is not None:
-                self.label_layer = self._viewer.add_labels(1*(image_mask_pred[1] > 0.5), name='label', color={1: 'green'}, blending='additive')
+                self.label_layer = self._viewer.add_labels(1 * (image_mask_pred[1] > 0.5), name='label',
+                                                           color={1: 'green'}, blending='additive')
         else:
             if image_mask_pred[1] is not None:
-                self.label_layer.data = 1*(image_mask_pred[1] > 0.5)
+                self.label_layer.data = 1 * (image_mask_pred[1] > 0.5)
         if self.prediction_layer is None:
             if image_mask_pred[2] is not None:
-                self.prediction_layer = self._viewer.add_labels(1*(image_mask_pred[2] > 0.5), name='prediction', color={1: 'magenta'}, blending='additive')
+                self.prediction_layer = self._viewer.add_labels(1 * (image_mask_pred[2] > 0.5), name='prediction',
+                                                                color={1: 'magenta'}, blending='additive')
         else:
             if image_mask_pred[2] is not None:
-                self.prediction_layer.data = 1*(image_mask_pred[2] > 0.5)
+                self.prediction_layer.data = 1 * (image_mask_pred[2] > 0.5)
 
     def delete_worker(self):
         del self.worker
         self.worker = None
-        self.btn4.setText('start training')
+        self.btn5.setText('start training')
 
     def trainer(self):
         if self.worker:
             if self.worker.is_running:
-                self.btn4.setText('stopping...')
+                self.btn5.setText('stopping...')
                 self.stop_training = True
                 self.worker.send(self.stop_training)
             else:
@@ -199,10 +215,20 @@ class Trainer(QWidget):
 
             print(dataloaders_dict)
 
+            # GPUが使えるかを確認
+            device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+            print("使用デバイス：", device)
+
             net = UnetPlusPlus(encoder_name="efficientnet-b0", encoder_weights="imagenet", in_channels=1, classes=1,
                                activation='sigmoid')
 
             optimizer = optim.AdamW(net.parameters())
+
+            try:
+                net.load_state_dict(torch.load(self.prev_modelpath, map_location=device))
+                print('loaded model from ' + self.prev_modelpath)
+            except:
+                pass
 
             num_epochs = self.epoch.value()
 
@@ -212,15 +238,15 @@ class Trainer(QWidget):
 
             self.worker = create_worker(train_model, self.modelpath, net, dataloaders_dict, criterion, scheduler,
                                         optimizer,
-                                        num_epochs=num_epochs)
+                                        num_epochs=num_epochs, device=device)
             self.worker.started.connect(lambda: print("worker is running..."))
             self.worker.yielded.connect(self.update_layer)
             self.worker.finished.connect(self.delete_worker)
 
         if self.worker.is_running:
-            self.btn4.setText('stopping...')
+            self.btn5.setText('stopping...')
             self.stop_training = True
         else:
             self.worker.start()
             self.stop_training = False
-            self.btn4.setText('stop')
+            self.btn5.setText('stop')

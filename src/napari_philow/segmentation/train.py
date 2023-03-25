@@ -4,10 +4,7 @@ import time
 import torch
 
 
-def train_model(output_dir, net, dataloaders_dict, criterion, scheduler, optimizer, num_epochs):
-    # GPUが使えるかを確認
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    print("使用デバイス：", device)
+def train_model(output_dir, net, dataloaders_dict, criterion, scheduler, optimizer, num_epochs, device):
 
     # ネットワークをGPUへ
     net.to(device)
