@@ -26,6 +26,9 @@ https://napari.org/plugins/stable/index.html
 
 ## Installation
 
+Install napari and Pytorch first.   
+See [napari] and [Pytorch](https://pytorch.org/) for more information.
+
 You can install `napari-PHILOW` via [pip]:
 
     pip install napari-PHILOW
