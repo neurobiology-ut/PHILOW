@@ -14,11 +14,11 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QSi
 from napari.qt import thread_worker
 from skimage import io
 
-import utils
-from models import get_nested_unet
-from napari_view_simple import launch_viewers
-from predict import predict_3ax, predict_1ax
-from train import train_unet
+from legacy import utils
+from legacy.models import get_nested_unet
+from legacy.napari_view_simple import launch_viewers
+from legacy.predict import predict_3ax, predict_1ax
+from legacy.train import train_unet
 
 
 class Loader(QWidget):
