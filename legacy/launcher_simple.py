@@ -14,11 +14,11 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QSi
 from napari.qt import thread_worker
 from skimage import io
 
-import utils
-from models import get_nested_unet
-from napari_view_simple import launch_viewers
-from predict import predict_3ax, predict_1ax
-from train import train_unet
+from legacy import utils
+from legacy.models import get_nested_unet
+from legacy.napari_view_simple import launch_viewers
+from legacy.predict import predict_3ax, predict_1ax
+from legacy.train import train_unet
 
 
 class Loader(QWidget):
@@ -89,6 +89,11 @@ class Loader(QWidget):
             filenames = [fn.name for fn in sorted(list(Path(self.opath).glob('./*png')))]
             for i in range(len(labels)):
                 io.imsave(os.path.join(self.modpath, str(i).zfill(4) + '.png'), labels[i])
+        elif len(os.listdir(self.modpath)) == 0:
+            labels = np.zeros_like(images.compute())
+            filenames = [fn.name for fn in sorted(list(Path(self.opath).glob('./*png')))]
+            for i in range(len(labels)):
+                io.imsave(os.path.join(self.modpath, str(i).zfill(4) + '.png'), labels[i])            
         else:
             labels = utils.load_saved_masks(self.modpath)
         try:

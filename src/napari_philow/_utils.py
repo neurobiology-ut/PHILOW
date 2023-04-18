@@ -13,9 +13,6 @@ from skimage.filters import gaussian
 import pandas as pd
 from tqdm import tqdm
 
-import tensorflow.keras.backend as K
-from tensorflow.keras.losses import binary_crossentropy
-
 
 def combine_blocks(block1, block2):
     temp_widget = QWidget()
@@ -117,7 +114,7 @@ def load_saved_masks(mod_mask_dir):
     images_label = dask_image.imread.imread(filename_pattern_label)
     images_label = images_label.compute()
     base_label = images_label
-    return base_label
+    return base_label, [x.name for x in sorted(list(Path(mod_mask_dir).glob('./*png')))]
 
 
 def load_raw_masks(raw_mask_dir):
@@ -137,12 +134,11 @@ def combine_blocks(block1, block2):
     return temp_widget
 
 
-def save_masks(labels, out_path):
+def save_masks(labels, out_path, filenames):
     num = labels.shape[0]
-    os.makedirs(out_path, exist_ok=True)
     for i in range(num):
         label = labels[i]
-        io.imsave(os.path.join(out_path, str(i).zfill(4) + '.png'), label)
+        io.imsave(os.path.join(out_path, filenames[i]), label)
 
 
 def label_and_sort(base_label):
@@ -278,25 +274,6 @@ def select_train_data(dataframe, ori_imgs, label_imgs, ori_filenames):
             train_label_imgs.append(label_img)
     print(ori_filenames)
     return np.array(train_ori_imgs), np.array(train_label_imgs)
-
-
-def dice_coeff(y_true, y_pred):
-    smooth = 1.
-    y_true_f = K.flatten(y_true)
-    y_pred_f = K.flatten(y_pred)
-    intersection = K.sum(y_true_f * y_pred_f)
-    score = (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
-    return score
-
-
-def dice_loss(y_true, y_pred):
-    loss = 1 - dice_coeff(y_true, y_pred)
-    return loss
-
-
-def bce_dice_loss(y_true, y_pred):
-    loss = binary_crossentropy(y_true, y_pred) + dice_loss(y_true, y_pred)
-    return loss
 
 
 def divide_imgs(images):
