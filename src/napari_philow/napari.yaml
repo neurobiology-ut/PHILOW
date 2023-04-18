@@ -1,5 +1,5 @@
 name: napari-PHILOW
-schema_version: 0.2.0
+schema_version: 0.1.0
 contributions:
   commands:
   - id: napari-PHILOW.AnnotationMode
