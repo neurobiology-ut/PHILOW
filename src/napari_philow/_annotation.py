@@ -16,7 +16,6 @@ from napari_philow._utils import combine_blocks, load_images, load_saved_masks, 
     label_and_sort, save_masks, crop_img, show_so_layer
 
 
-
 class AnnotationMode(QWidget):
     def __init__(self, napari_viewer):
         super().__init__()
@@ -43,6 +42,8 @@ class AnnotationMode(QWidget):
         self.lbl2 = QLabel('mask dir', self)
         self.lbl4 = QLabel('model type (do not use word "train")', self)
         self.build()
+
+        self.filenames = None
 
     def build(self):
         vbox = QVBoxLayout()
@@ -72,21 +73,17 @@ class AnnotationMode(QWidget):
     def launch(self):
         images = load_images(self.opath)
         if self.modpath == "":
-            labels = np.zeros_like(images.compute())
             self.modpath = os.path.join(os.path.dirname(self.opath), self.textbox.text())
             os.makedirs(self.modpath, exist_ok=True)
-            filenames = [fn.name for fn in sorted(list(Path(self.opath).glob('./*png')))]
-            #for i in range(len(labels)):
-            #    io.imsave(os.path.join(self.modpath, str(i).zfill(4) + '.png'), labels[i])
-            for i, filename in enumerate(filenames):
-                io.imsave(os.path.join(self.modpath, filename), labels[i])
-        elif len(os.listdir(self.modpath)) == 0:
-            labels = np.zeros_like(images.compute())
-            filenames = [fn.name for fn in sorted(list(Path(self.opath).glob('./*png')))]
-            for i, filename in enumerate(filenames):
-                io.imsave(os.path.join(self.modpath, filename), labels[i])            
         else:
-            labels = load_saved_masks(self.modpath)
+            pass
+        if len(os.listdir(self.modpath)) == 0:
+            labels = np.zeros_like(images.compute())
+            self.filenames = [fn.name for fn in sorted(list(Path(self.opath).glob('./*png')))]
+            for i, filename in enumerate(self.filenames):
+                io.imsave(os.path.join(self.modpath, filename), labels[i])
+        else:
+            labels, self.filenames = load_saved_masks(self.modpath)
         try:
             labels_raw = load_raw_masks(self.modpath + '_raw')
         except:
@@ -123,6 +120,7 @@ class AnnotationMode(QWidget):
             print(nums)
             labeled_c = label_ct(labeled_sorted, nums, 10)
             return labeled_c, labeled_sorted, nums, viewer
+
         if len(np.unique(base_label)) > 1:
             create_label(self._viewer)
 
@@ -135,7 +133,6 @@ class AnnotationMode(QWidget):
             print("The filename is:", dirname)
             return dirname
 
-        # gui = dirpicker.Gui(show=True)
         self._viewer.window.add_dock_widget(dirpicker, area='bottom')
 
         @magicgui(call_button="save")
@@ -143,10 +140,8 @@ class AnnotationMode(QWidget):
             # out_dir = gui.dirname
             out_dir = dirpicker.dirname.value
             print("The directory is:", out_dir)
-            return save_masks(layer1.data, out_dir)
+            return save_masks(layer1.data, out_dir, self.filenames)
 
-        # gui2 = saver.Gui(show=True)
-        # self._viewer.window.add_dock_widget(gui2, area='bottom')
         self._viewer.window.add_dock_widget(saver, area='bottom')
 
         dmg = Datamanager()
@@ -187,15 +182,13 @@ class AnnotationMode(QWidget):
             # canvas.figure.tight_layout()
             canvas.figure.subplots_adjust(left=0, bottom=0.1, right=1, top=0.95, wspace=0, hspace=0.4)
 
-        canvas.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Maximum)
-
         self._viewer.window.add_dock_widget(canvas, area='right')
 
         @layer.mouse_drag_callbacks.append
         def update_canvas_canvas(layer, event):
             if 'shift' in event.modifiers:
                 try:
-                    m_point = np.round(layer.position).astype(int)
+                    m_point = np.round(self._viewer.cursor.position).astype(int)
                     print(m_point)
                     crop_big = crop_img([m_point[0], m_point[1], m_point[2]], layer)
                     xy_axes.imshow(crop_big[50], 'gray')

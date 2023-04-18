@@ -1,140 +1,93 @@
+import glob
 import os
 
-import cv2
+import dask_image.imread
 import numpy as np
+from PIL import Image
+from skimage import io
+from tifffile import natural_sorted
+from tqdm import tqdm
 
-from napari_philow._utils import denormalize_y, divide_imgs, load_Y_gray, merge_imgs
+from napari_philow.segmentation.predict import pred_large_image
 
 
-def predict(X_test, model, out_dir):
-    BATCH_SIZE = 1
-    Y_pred = model.predict(X_test, BATCH_SIZE)
+def predict_and_save(dask_arr, net, out_dir_axis, size, device):
+    """
+    Args:
+        dask_arr (dask.array.Array): 3D input image
+        net (torch.nn.Module): model
+        out_dir_axis (str): output directory for the prediction of the current axis
+        size (int): patch size
+        device (str): e.g. 'cpu', 'cuda:0'
+    """
+    for i in tqdm(range(len(dask_arr))):
+        pred = 255 * pred_large_image(Image.fromarray(dask_arr[i].compute()), net, device, size)
+        io.imsave(os.path.join(out_dir_axis, str(i).zfill(6) + '.png'), pred.astype(np.uint8))
 
-    print(Y_pred.shape)
+
+def predict_3ax(o_path, net, out_dir, size, device):
+    """
+    predict 3 axes (TAP) and merge the prediction
+    Args:
+        o_path (str): original image directory path
+        net (torch.nn.Module): model
+        out_dir (str): output directory
+        size (int): patch size
+        device (str): e.g. 'cpu', 'cuda:0'
+    """
     os.makedirs(out_dir, exist_ok=True)
+    out_dir_merge = os.path.join(out_dir, 'merged_prediction')
+    os.makedirs(out_dir_merge, exist_ok=True)
+    os.makedirs(f"{out_dir_merge}_raw", exist_ok=True)
+    filenames = natural_sorted(glob.glob(os.path.join(o_path, '*.png')))
+    xy_imgs = dask_image.imread.imread(os.path.join(o_path, '*.png'))
+    print(f"xy_imgs.shape: {xy_imgs.shape}")
+    yz_imgs = xy_imgs.transpose(2, 0, 1)
+    zx_imgs = xy_imgs.transpose(1, 2, 0)
+    os.makedirs(os.path.join(out_dir, 'pred_xy'), exist_ok=True)
+    os.makedirs(os.path.join(out_dir, 'pred_yz'), exist_ok=True)
+    os.makedirs(os.path.join(out_dir, 'pred_zx'), exist_ok=True)
+    predict_and_save(xy_imgs, net, os.path.join(out_dir, 'pred_xy'), size, device)
+    predict_and_save(yz_imgs, net, os.path.join(out_dir, 'pred_yz'), size, device)
+    predict_and_save(zx_imgs, net, os.path.join(out_dir, 'pred_zx'), size, device)
+    pred_xy_imgs = dask_image.imread.imread(os.path.join(out_dir, 'pred_xy', '*png'))
+    pred_yz_imgs = dask_image.imread.imread(os.path.join(out_dir, 'pred_yz', '*png'))
+    pred_zx_imgs = dask_image.imread.imread(os.path.join(out_dir, 'pred_zx', '*png'))
+    print(pred_xy_imgs.shape)
+    print(pred_yz_imgs.shape)
+    print(pred_zx_imgs.shape)
+    pred_yz_imgs_xy = pred_yz_imgs.transpose(1, 2, 0)
+    pred_zx_imgs_xy = pred_zx_imgs.transpose(2, 0, 1)
+    for i in tqdm(range(len(pred_xy_imgs))):
+        mito_img_ave = pred_xy_imgs[i].compute() // 3 + pred_yz_imgs_xy[i].compute() // 3 + pred_zx_imgs_xy[i].compute() // 3
+        img = np.where(mito_img_ave >= 127, 1, 0)
+        io.imsave(f'{out_dir_merge}/{os.path.basename(filenames[i])}', img.astype(np.uint8))
+        img_ = np.where(mito_img_ave >= 127, mito_img_ave, 0)
+        io.imsave(f'{out_dir_merge}_raw/{os.path.basename(filenames[i])}', img_.astype(np.uint8))
 
-    if Y_pred.shape[3] != 1:
-        num = Y_pred.shape[3]
-        for n in range(num):
-            os.makedirs(os.path.join(out_dir, str(n + 1)), exist_ok=True)
-        for i, y in enumerate(Y_pred):
-            for n in range(num):
-                cv2.imwrite(os.path.join(out_dir, str(n + 1), str(i).zfill(6) + '.png'), denormalize_y(y[:, :, n]))
 
-    else:
-        for i, y in enumerate(Y_pred):
-            cv2.imwrite(os.path.join(out_dir, str(i).zfill(6) + '.png'), denormalize_y(y))
-
-
-def predict_3ax(ori_imgs, model, out_dir, filenames):
+def predict_1ax(ori_filenames, net, out_dir, size, device):
+    """
+    predict 1 axis and merge the prediction
+    Args:
+        ori_filenames (List[Path]):
+        net (torch.nn.Module): model
+        out_dir (str): output directory
+        size (int):  patch size
+        device (str): e.g. 'cpu', 'cuda:0'
+    """
     os.makedirs(out_dir, exist_ok=True)
-
-    # XY
-    seped_xy_imgs = divide_imgs(ori_imgs)
-
-    predict(
-        X_test=seped_xy_imgs,
-        model=model,
-        out_dir=os.path.join(out_dir, "pred_xy"),
-    )
-
-    # YZ
-    seped_yz_imgs = divide_imgs(ori_imgs.transpose(2, 0, 1, 3))
-
-    predict(
-        X_test=seped_yz_imgs,
-        model=model,
-        out_dir=os.path.join(out_dir, "pred_yz"),
-    )
-
-    # ZX
-    seped_zx_imgs = divide_imgs(ori_imgs.transpose(1, 2, 0, 3))
-
-    predict(
-        X_test=seped_zx_imgs,
-        model=model,
-        out_dir=os.path.join(out_dir, "pred_zx"),
-    )
-
-    ori_image_shape = ori_imgs.shape
-
-    pred_xy_imgs, _ = load_Y_gray(os.path.join(out_dir, "pred_xy"))
-    merged_imgs_xy = merge_imgs(pred_xy_imgs, ori_image_shape)
-
-    pred_yz_imgs, _ = load_Y_gray(os.path.join(out_dir, "pred_yz"))
-    merged_imgs_yz = merge_imgs(pred_yz_imgs,
-                                (ori_image_shape[2], ori_image_shape[0], ori_image_shape[1], ori_image_shape[3]))
-
-    pred_zx_imgs, _ = load_Y_gray(os.path.join(out_dir, "pred_zx"))
-    merged_imgs_zx = merge_imgs(pred_zx_imgs,
-                                (ori_image_shape[1], ori_image_shape[2], ori_image_shape[0], ori_image_shape[3]))
-
-    mito_imgs_ave = merged_imgs_xy * 255 // 3 + merged_imgs_yz.transpose(1, 2, 0, 3) * 255 // 3 \
-                    + merged_imgs_zx.transpose(2, 0, 1, 3) * 255 // 3
-
     out_dir_merge = os.path.join(out_dir, 'merged_prediction')
     os.makedirs(out_dir_merge, exist_ok=True)
     os.makedirs(f"{out_dir_merge}_raw", exist_ok=True)
 
-    for i in range(mito_imgs_ave.shape[0]):
+    for filename in ori_filenames:
+        image = Image.open(str(filename))
+        mito_imgs_ave = 255 * pred_large_image(image, net, device, size)
         # threshed
-        img = np.where(
-            mito_imgs_ave[:, :, :, 0][i] >= 127,
-            1,
-            0
-        )
-        # cv2.imwrite(f'{out_dir_merge}/{str(i).zfill(4)}.png', img)
-        cv2.imwrite(f'{out_dir_merge}/{filenames[i]}', img)
+        img = np.where(mito_imgs_ave >= 127, 1, 0)
+        io.imsave(f'{out_dir_merge}/{filename.name}', img.astype('int32'))
 
-        # averaged
-        img_ = np.where(
-            mito_imgs_ave[:, :, :, 0][i] >= 127,
-            mito_imgs_ave[:, :, :, 0][i],
-            0
-        )
-        # cv2.imwrite(f'{out_dir_merge}_raw/{str(i).zfill(4)}.png', img_)
-        cv2.imwrite(f'{out_dir_merge}_raw/{filenames[i]}', img_)
-
-
-def predict_1ax(ori_imgs, model, out_dir, filenames):
-    os.makedirs(out_dir, exist_ok=True)
-
-    # XY
-    seped_xy_imgs = divide_imgs(ori_imgs)
-
-    predict(
-        X_test=seped_xy_imgs,
-        model=model,
-        out_dir=os.path.join(out_dir, "pred_xy"),
-    )
-
-    ori_image_shape = ori_imgs.shape
-
-    pred_xy_imgs, _ = load_Y_gray(os.path.join(out_dir, "pred_xy"))
-    merged_imgs_xy = merge_imgs(pred_xy_imgs, ori_image_shape)
-
-    # mito_imgs_ave = merged_imgs_xy * 255
-    mito_imgs_ave = merged_imgs_xy
-
-    out_dir_merge = os.path.join(out_dir, 'merged_prediction')
-    os.makedirs(out_dir_merge, exist_ok=True)
-    os.makedirs(f"{out_dir_merge}_raw", exist_ok=True)
-
-    for i in range(mito_imgs_ave.shape[0]):
-        # threshed
-        img = np.where(
-            mito_imgs_ave[:, :, :, 0][i] >= 127,
-            1,
-            0
-        )
-        # cv2.imwrite(f'{out_dir_merge}/{str(i).zfill(4)}.png', img)
-        cv2.imwrite(f'{out_dir_merge}/{filenames[i]}', img)
-
-        # averaged
-        img_ = np.where(
-            mito_imgs_ave[:, :, :, 0][i] >= 127,
-            mito_imgs_ave[:, :, :, 0][i],
-            0
-        )
-        # cv2.imwrite(f'{out_dir_merge}_raw/{str(i).zfill(4)}.png', img_)
-        cv2.imwrite(f'{out_dir_merge}_raw/{filenames[i]}', img_)
+        # raw
+        img_ = np.where(mito_imgs_ave[:, :] >= 127, mito_imgs_ave, 0)
+        io.imsave(f'{out_dir_merge}_raw/{filename.name}', img_.astype('uint8'))

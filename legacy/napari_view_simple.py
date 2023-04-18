@@ -14,7 +14,7 @@ from napari._qt.qthreading import thread_worker
 from scipy import ndimage
 
 import utils
-from dock import Datamanager
+from legacy.dock import Datamanager
 
 
 def launch_viewers(original, base, raw, r_path, model_type, checkbox):
