@@ -14,8 +14,8 @@ Table of Contents
 ^^^^^^^^^^^^^^^^^
 
 .. toctree::
-   
-   ./installation
+
+   installation
 
 Indices and tables
 ==================
