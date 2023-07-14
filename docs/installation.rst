@@ -10,11 +10,13 @@ Installation
 | You can install `napari-PHILOW` via [pip](https://pypi.org/project/pip/): 
 
 .. code-block::
+
     pip install napari-PHILOW
 
 | or clone this repository.
 | then 
 
 .. code-block::
+    
     cd PHILOW
     pip install -e .
