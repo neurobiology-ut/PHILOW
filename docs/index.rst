@@ -10,7 +10,9 @@ Welcome to napari-PHILOW's documentation!
    :maxdepth: 2
    :caption: Contents:
    
-   installation
+Table of Contents
+^^^^^^^^^^^^^^^^^
+   ./installation
 
 Indices and tables
 ==================

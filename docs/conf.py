@@ -18,8 +18,8 @@
 # -- Project information -----------------------------------------------------
 
 project = 'napari-PHILOW'
-copyright = '2023, Hiroki Kawai'
-author = 'Hiroki Kawai'
+copyright = '2023, Hiroki Kawai, Shogo Suga'
+author = 'Hiroki Kawai, Shogo Suga'
 
 
 # -- General configuration ---------------------------------------------------
