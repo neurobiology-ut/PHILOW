@@ -1,3 +1,3 @@
-.. mypage_title::
+.. installation::
     
 Install napari and Pytorch first.
