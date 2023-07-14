@@ -9,8 +9,8 @@ Welcome to napari-PHILOW's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-
-
+   
+   installation
 
 Indices and tables
 ==================
