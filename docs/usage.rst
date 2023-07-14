@@ -59,3 +59,21 @@ Create labels
 .. note::
 
     Create a label with the brush function. more information → https://napari.org/tutorials/fundamentals/labels.html
+
+
+Training Mode
+-------------
+
+Launch napari
+^^^^^^^^^^^^^
+
+.. code-block::
+
+    napari
+
+
+Load dataset
+^^^^^^^^^^^^
+
+1. Plugins > napari-PHILOW > Trainer
+
