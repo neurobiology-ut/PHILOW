@@ -14,9 +14,11 @@ Table of Contents
 
    installation
 
-Indices and tables
-==================
+.. Indices and tables
+   ==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   * :ref:`genindex`
+   * :ref:`modindex`
+   * :ref:`search`
+
+.. image:: images/movie_001.gif
