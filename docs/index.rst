@@ -12,7 +12,7 @@ Table of Contents
 ^^^^^^^^^^^^^^^^^
 
 .. toctree::
-   :numberd:
+   :numbered:
    :maxdepth: 2
 
    installation
