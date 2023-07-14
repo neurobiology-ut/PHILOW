@@ -12,7 +12,7 @@ Installation
 
     napari-PHILOW`
 
-| via `pip <https://pypi.org/project/pip/>`: 
+| via `pip <https://pypi.org/project/pip/>`_: 
 
 .. code-block::
 
