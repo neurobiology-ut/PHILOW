@@ -12,6 +12,9 @@ Welcome to napari-PHILOW's documentation!
    
 Table of Contents
 ^^^^^^^^^^^^^^^^^
+
+.. toctree::
+   
    ./installation
 
 Indices and tables
