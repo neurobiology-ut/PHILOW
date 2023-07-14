@@ -56,4 +56,6 @@ Create labels
 
 .. image:: images/image_002.jpeg
 
+.. note::
 
+    Create a label with the brush function. more information → https://napari.org/tutorials/fundamentals/labels.html
