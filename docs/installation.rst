@@ -1,6 +1,6 @@
 .. installation::
     
-installation
+Installation
 ============
 
 

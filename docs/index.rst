@@ -6,9 +6,6 @@
 Welcome to napari-PHILOW's documentation!
 =========================================
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
    
 Table of Contents
 ^^^^^^^^^^^^^^^^^
