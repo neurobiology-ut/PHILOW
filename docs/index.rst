@@ -6,19 +6,14 @@
 Welcome to napari-PHILOW's documentation!
 =========================================
 
-   
+.. image:: images/movie_001.gif
+
 Table of Contents
 ^^^^^^^^^^^^^^^^^
 
 .. toctree::
+   :numberd:
+   :maxdepth: 2
 
    installation
-
-.. Indices and tables
-   ==================
-
-   * :ref:`genindex`
-   * :ref:`modindex`
-   * :ref:`search`
-
-.. image:: images/movie_001.gif
+   usage
