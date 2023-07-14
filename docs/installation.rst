@@ -5,7 +5,7 @@ Installation
 
 
 | Install napari and Pytorch first. 
-| See `napari <https://github.com/napari/napari>` and `Pytorch <https://pytorch.org/>` for more information. 
+| See `napari <https://github.com/napari/napari>`_ and `Pytorch <https://pytorch.org/>`_ for more information. 
 
 | You can install 
 .. code-block::
