@@ -15,18 +15,15 @@ Launch napari
 Load dataset
 ------------
 
-Plugins > napari-PHILOW > Annotation Mode
-"""""""""""""""""""""""""""""""""""""""""
+1. Plugins > napari-PHILOW > Annotation Mode
 
 .. image:: images/image_001.jpeg
 
-Select original dir 
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+2. Select original dir 
 
 | All slices must be in separate PNG and must be sequentially numbered (e.g. 000.png, 001.png ...)
 
-Select mask dir
-"""""""""""""""
+3. Select mask dir
 
 | To resume from the middle of the annotation, specify here the name of the directory containing the mask image. 
 | The directory must contain the same number of files with the same name as the original image.
@@ -34,15 +31,19 @@ Select mask dir
 | The directory for mask is automatically created and blank images are generated and stored.
 
 
-Enter a name for the label or model you want to create
-""""""""""""""""""""""""""""""""""""""""""""""""""""""
+4. Enter a name for the label or model you want to create
 
 | This name will be used as the directory name of the newly created mask dir if no mask dir is specified, and as the name of the csv file for training dataset management.
 
-Check if you want to create new dataset (new model) 
-"""""""""""""""""""""""""""""""""""""""""""""""""""
+5. Check if you want to create new dataset (new model) 
 
 | When checked, if there is already a csv file for training dataset management, a new csv file with one sequential number will be generated.
 
-Start tracing
-""""""""""""""
+6. Start tracing
+
+Create labels
+------------
+
+.. image:: images/image_002.jpeg
+
+
