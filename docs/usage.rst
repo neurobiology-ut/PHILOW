@@ -25,7 +25,7 @@ Load dataset
 
 .. note::
 
-    All slices must be in separate PNG and must be sequentially numbered (e.g. 000.png, 001.png ...)
+    All slices must be in separate PNG and must be sequentially numbered (e.g. 000.png, 001.png ...).
 
 3. Select mask dir
 
@@ -85,4 +85,16 @@ Load dataset
 
 .. note::
 
-        All slices must be in separate PNG and must be sequentially numbered (e.g. 000.png, 001.png ...)
+        All slices must be in separate PNG and must be sequentially numbered (e.g. 000.png, 001.png ...).
+
+3. Select labels dir
+
+.. note::
+
+        All label images should be named same as original images and contains data management csv file.
+
+4. Select dir for save trained model
+
+5. Click on the "start training" button
+
+.. image:: images/image_005.jpeg
