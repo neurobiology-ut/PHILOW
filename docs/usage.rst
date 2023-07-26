@@ -79,8 +79,6 @@ Load dataset
 
 .. image:: images/image_003.jpeg
 
-.. image:: images/image_004.jpeg
-
 2. Select original dir
 
 .. note::
