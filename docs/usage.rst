@@ -98,3 +98,12 @@ Load dataset
 5. Click on the "start training" button
 
 .. image:: images/image_005.jpeg
+
+6. Dice loss score and the predicted results are displayed.
+
+.. image:: images/movie_001.gif
+
+.. note:: 
+
+    For more detail, check the command line for the progress of training. 
+    If you want to stop in the middle, click stop button.
