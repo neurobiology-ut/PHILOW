@@ -126,4 +126,6 @@ Load dataset
 
 1. Plugins > napari-PHILOW > Predicter
 
-.. image:: image/image_006.jpeg
+.. image:: images/image_006.jpeg
+
+2. 
