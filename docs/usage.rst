@@ -128,4 +128,27 @@ Load dataset
 
 .. image:: images/image_006.jpeg
 
-2. 
+.. image:: images/image_007.jpeg
+
+2. Select original dir
+
+.. note::
+
+    All slices must be in separate PNG and must be sequentially numbered (e.g. 000.png, 001.png ...).
+
+.. note::
+
+    Select labels dir if you want to keep labels which were used on training, and data management csv file
+
+3. Select model dir contains hdf5 file
+
+4. Select output dir for predicted labels
+
+5. Uncheck the box if you DO NOT want to use TAP (Three-Axes-Prediction)
+
+Predict using the model
+^^^^^^^^^^^^^^^^^^^^^^^
+
+1. Click on the "predict" button
+
+.. image:: images/image_008.jpeg
