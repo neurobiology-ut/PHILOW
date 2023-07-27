@@ -152,3 +152,11 @@ Predict using the model
 1. Click on the "predict" button
 
 .. image:: images/image_008.jpeg
+
+.. note::
+    
+    Check the command line for the progress of prediction. If you want to stop in the middle, use ctrl+C.
+
+.. note::
+    
+    You can start the next round of annotation by selecting the merged_prediction directory as the mask dir in Annotation mode.
