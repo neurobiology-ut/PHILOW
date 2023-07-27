@@ -111,4 +111,19 @@ Train the model
     For more detail, check the command line for the progress of training. 
     If you want to stop in the middle, click stop button.
 
+Prediction Mode
+---------------
 
+Launch napari
+^^^^^^^^^^^^^
+
+.. code-block::
+
+    napari
+
+Load dataset
+^^^^^^^^^^^^
+
+1. Plugins > napari-PHILOW > Predicter
+
+.. image:: image/image_006.jpeg
