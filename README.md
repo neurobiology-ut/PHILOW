@@ -168,16 +168,19 @@ Shogo Suga, Koki Nakamura, Yu Nakanishi, Bruno M Humbel, Hiroki Kawai, Yusuke Hi
 
 
 ```
-@article {Suga2021.06.11.448083,
-	author = {Suga, Shogo and Nakamura, Koki and Humbel, Bruno M and Kawai, Hiroki and Hirabayashi, Yusuke},
-	title = {An interactive deep learning-based approach reveals mitochondrial cristae topologies},
-	elocation-id = {2021.06.11.448083},
-	year = {2021},
-	doi = {10.1101/2021.06.11.448083},
-	publisher = {Cold Spring Harbor Laboratory},
-	URL = {https://www.biorxiv.org/content/early/2021/06/11/2021.06.11.448083},
-	eprint = {https://www.biorxiv.org/content/early/2021/06/11/2021.06.11.448083.full.pdf},
-	journal = {bioRxiv}
+@article {Suga_Nakamura_Nakanishi_Humbel_Kawai_Hirabayashi_2023,
+	title={An interactive deep learning-based approach reveals mitochondrial cristae topologies},
+	volume={21},
+	ISSN={1545-7885},
+	DOI={10.1371/journal.pbio.3002246},
+	number={8},
+	journal={PLOS Biology},
+	publisher={Public Library of Science},
+	author={Suga, Shogo and Nakamura, Koki and Nakanishi, Yu and Humbel, Bruno M. and Kawai, Hiroki and Hirabayashi, Yusuke},
+	year={2023},
+	month={Aug},
+	pages={e3002246},
+	language={en}
 }
 ```
 
