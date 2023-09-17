@@ -163,8 +163,8 @@ Hiroki Kawai <br>
 
 
 # How to Cite <br>
-Shogo Suga, Koki Nakamura, Bruno M Humbel, Hiroki Kawai, Yusuke Hirabayashi, An interactive deep learning-based approach reveals mitochondrial cristae topologies
-<a href="https://doi.org/10.1101/2021.06.11.448083">https://doi.org/10.1101/2021.06.11.448083</a>
+Shogo Suga, Koki Nakamura, Yu Nakanishi, Bruno M Humbel, Hiroki Kawai, Yusuke Hirabayashi, An interactive deep learning-based approach reveals mitochondrial cristae topologies. PLoS Biol 21(8): e3002246.
+<a href="https://doi.org/10.1371/journal.pbio.3002246">https://doi.org/10.1371/journal.pbio.3002246</a>
 
 
 ```
