@@ -55,7 +55,7 @@ napari
 
 1) Plugins > napari-PHILOW > Annotation Mode
 
-2) Select original dir : all slices must be in separate PNG and must be sequentially numbered (e.g. 000.png, 001.png ...)
+2) Select original dir : all slices must be in separate 8bit PNG and must be sequentially numbered (e.g. 000.png, 001.png ...)
 
 3) Select mask dir : To resume from the middle of the annotation, specify here the name of the directory containing the mask image. The directory must contain the same number of files with the same name as the original image.   
  If you are starting a completely new annotation, you do not need to specify a directory. The directory for mask is automatically created and blank images are generated and stored.
@@ -102,7 +102,7 @@ To train on your GPU machine (or with CPU),
 
 1) Plugins > napari-PHILOW > Trainer
    
-2) Select original dir : all slices must be in separate PNG and must be sequentially numbered (e.g. 000.png, 001.png ...)   
+2) Select original dir : all slices must be in separate 8bit PNG and must be sequentially numbered (e.g. 000.png, 001.png ...)   
    
 3) Select labels dir : all label images should be named same as original images and contains data management csv file   
    
@@ -117,7 +117,7 @@ To predict labels on your machine,
 
 1) Plugins > napari-PHILOW > Predicter
    
-2) Select original dir : all slices must be in separate PNG and must be sequentially numbered (e.g. 000.png, 001.png ...)   
+2) Select original dir : all slices must be in separate 8bit PNG and must be sequentially numbered (e.g. 000.png, 001.png ...)   
    
 3) (Optional) Select labels dir if you want to keep labels witch were used on training, and data management csv file   
    
