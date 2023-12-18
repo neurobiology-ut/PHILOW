@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 
 import cv2
+import dask
 import dask_image.imread
 from qtpy.QtWidgets import QWidget, QHBoxLayout, QSlider, QLabel
 from qtpy.QtCore import Qt
@@ -35,6 +36,15 @@ def normalize_y(image):
 
 def denormalize_y(image):
     return image * 255
+
+
+def renormalize_8bit(image):
+    origin_min = image.min()
+    origin_max = image.max()
+    image -= origin_min
+    image = image/(origin_max-origin_min)
+    image *= 255
+    return image.astype(np.uint8)
 
 
 def annotation_to_input(label_ermito):
@@ -95,7 +105,8 @@ def check(project_path, ext):
 def load_images(directory):
     filename_pattern_original = os.path.join(directory, '*png')
     images_original = dask_image.imread.imread(filename_pattern_original)
-    return images_original
+    renormalized_images_original = dask.array.asarray([ renormalize_8bit(images_original[z]) for z in range(images_original.shape[0]) ])
+    return renormalized_images_original
 
 
 def load_predicted_masks(mito_mask_dir, er_mask_dir):
