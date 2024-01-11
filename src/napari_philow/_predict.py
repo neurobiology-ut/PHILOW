@@ -91,7 +91,8 @@ def predict_1ax(ori_filenames, net, out_dir, size, device):
         mito_imgs_ave = 255 * pred_large_image(image, net, device, size)
         # threshed
         img = np.where(mito_imgs_ave >= 127, 1, 0)
-        io.imsave(f'{out_dir_merge}/{filename.name}', img.astype('int32'))
+        #io.imsave(f'{out_dir_merge}/{filename.name}', img.astype('int32'))
+        io.imsave(f'{out_dir_merge}/{filename.name}', img.astype('uint8'))
 
         # raw
         img_ = np.where(mito_imgs_ave[:, :] >= 127, mito_imgs_ave, 0)
