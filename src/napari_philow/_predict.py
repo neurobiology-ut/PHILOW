@@ -2,6 +2,7 @@ import glob
 import os
 
 import dask_image.imread
+import dask
 import numpy as np
 from PIL import Image
 from skimage import io
@@ -9,6 +10,7 @@ from tifffile import natural_sorted
 from tqdm import tqdm
 
 from napari_philow.segmentation.predict import pred_large_image
+from napari_philow._utils import renormalize_8bit
 
 
 def predict_and_save(dask_arr, net, out_dir_axis, size, device):
@@ -41,6 +43,7 @@ def predict_3ax(o_path, net, out_dir, size, device):
     os.makedirs(f"{out_dir_merge}_raw", exist_ok=True)
     filenames = natural_sorted(glob.glob(os.path.join(o_path, '*.png')))
     xy_imgs = dask_image.imread.imread(os.path.join(o_path, '*.png'))
+    xy_imgs = dask.array.asarray([ renormalize_8bit(xy_imgs[z]) for z in range(xy_imgs.shape[0]) ])
     print(f"xy_imgs.shape: {xy_imgs.shape}")
     yz_imgs = xy_imgs.transpose(2, 0, 1)
     zx_imgs = xy_imgs.transpose(1, 2, 0)
@@ -83,10 +86,12 @@ def predict_1ax(ori_filenames, net, out_dir, size, device):
 
     for filename in ori_filenames:
         image = Image.open(str(filename))
+        image = renormalize_8bit(np.array(image))
+        image = Image.fromarray(image)
         mito_imgs_ave = 255 * pred_large_image(image, net, device, size)
         # threshed
         img = np.where(mito_imgs_ave >= 127, 1, 0)
-        io.imsave(f'{out_dir_merge}/{filename.name}', img.astype('int32'))
+        io.imsave(f"{out_dir_merge}/{filename.name}", img.astype("uint8"))
 
         # raw
         img_ = np.where(mito_imgs_ave[:, :] >= 127, mito_imgs_ave, 0)

@@ -216,7 +216,7 @@ class Trainer(QWidget):
             print(dataloaders_dict)
 
             # GPUが使えるかを確認
-            device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+            device = torch.device("cuda:0" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
             print("使用デバイス：", device)
 
             net = UnetPlusPlus(encoder_name="efficientnet-b0", encoder_weights="imagenet", in_channels=1, classes=1,

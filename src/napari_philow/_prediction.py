@@ -105,7 +105,7 @@ class Predicter(QWidget):
 
         self.net = UnetPlusPlus(encoder_name="efficientnet-b0", encoder_weights="imagenet", in_channels=1, classes=1,
                                 activation='sigmoid')
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
         state_dict = torch.load(self.modelpath, map_location=torch.device(self.device))
         self.net.load_state_dict(state_dict)
         self.net.to(self.device)

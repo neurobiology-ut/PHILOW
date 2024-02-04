@@ -1,8 +1,11 @@
 import os.path
 
+import numpy as np
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision.transforms import functional
+
+from .._utils import renormalize_8bit
 
 from .data_augmentation  import RandomCrop, Compose, RandomVFlip, RandomHFlip, RondomRotateShiftScale
 
@@ -33,7 +36,13 @@ class PHILOWDataset(Dataset):
 
     def pull_item(self, index):
         # read data
-        img = Image.open(os.path.join(self.images_dir, str(self.names[index]))).convert("L")
+        # img = Image.open(os.path.join(self.images_dir, str(self.names[index]))).convert("L")
+        # img = Image.fromarray(renormalize_8bit(np.array(img)))
+        img = Image.open(os.path.join(self.images_dir, str(self.names[index])))
+        if img.mode == "I":
+            img = Image.fromarray(renormalize_8bit(np.array(img)))
+        else:
+            img = img.convert("L")
         if self.labels_dir is not None:
             mask = Image.open(os.path.join(self.labels_dir, str(self.names[index]))).convert("L")
         else:
