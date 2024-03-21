@@ -28,32 +28,36 @@ class Trainer(QWidget):
         self._viewer = napari_viewer
         self.opath = ""
         self.labelpath = ""
+        self.cristaepath = ""
         self.modelpath = ""
         self.prev_modelpath = ""
+        self.lbl = QLabel('original dir', self)
         self.btn1 = QPushButton('open', self)
         self.btn1.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.btn1.clicked.connect(self.show_dialog_o)
+        self.lbl2 = QLabel('label dir', self)
         self.btn2 = QPushButton('open', self)
         self.btn2.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.btn2.clicked.connect(self.show_dialog_label)
+        self.lbl3 = QLabel('model output dir', self)
         self.btn3 = QPushButton('open', self)
         self.btn3.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.btn3.clicked.connect(self.show_dialog_model)
+        self.lbl4 = QLabel('(optional) previous model path (.pth)', self)
         self.btn4 = QPushButton('open', self)
         self.btn4.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.btn4.clicked.connect(self.show_dialog_prev_model)
         self.btn5 = QPushButton('start training', self)
         self.btn5.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.btn5.clicked.connect(self.trainer)
-        self.lbl = QLabel('original dir', self)
-        self.lbl2 = QLabel('label dir', self)
-        self.lbl3 = QLabel('model output dir', self)
-        self.lbl4 = QLabel('(optional) previous model path (.pth)', self)
+        self.btn5.clicked.connect(self.start_training)
         self.lbl5 = QLabel('epochs', self)
         self.epoch = QSpinBox(maximum=1000, value=400)
         self.checkBox = QCheckBox("Resize to 256x256?")
         self.checkBox_split = QCheckBox("Split and create validation data from training data?")
         self.checkBox.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.checkBox_cristae = QCheckBox("Cristae segmentation mode")
+        self.checkBox_cristae.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.checkBox_cristae.stateChanged.connect(self.toggle_checkboxes)
 
         with plt.style.context('dark_background'):
             self.canvas = FigureCanvas(Figure(figsize=(3, 5)))
@@ -79,8 +83,9 @@ class Trainer(QWidget):
         vbox.addWidget(combine_blocks(self.btn3, self.lbl3))
         vbox.addWidget(combine_blocks(self.btn4, self.lbl4))
         vbox.addWidget(combine_blocks(self.lbl5, self.epoch))
-        # vbox.addWidget(self.checkBox)
+        vbox.addWidget(self.checkBox)
         vbox.addWidget(self.checkBox_split)
+        vbox.addWidget(self.checkBox_cristae)
         vbox.addWidget(self.btn5)
         vbox.addWidget(self.canvas)
 
@@ -119,6 +124,20 @@ class Trainer(QWidget):
         csvs = sorted(list(Path(self.labelpath).glob('./*csv')))
         csv = pd.read_csv(str(csvs[-1]), index_col=0)
         return csv
+
+    def toggle_checkboxes(self, state):
+        if state == Qt.Checked:
+            self.checkBox.setVisible(False)
+            self.checkBox_split.setVisible(False)
+        else:
+            self.checkBox.setVisible(True)
+            self.checkBox_split.setVisible(True)
+
+    def start_training(self):
+        if self.checkBox_cristae.isChecked():
+            self.trainer_cristae()
+        else:
+            self.trainer()
 
     def update_layer(self, value):
         self.axes.clear()

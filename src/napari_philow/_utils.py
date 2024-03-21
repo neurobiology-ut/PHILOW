@@ -105,7 +105,7 @@ def check(project_path, ext):
 def load_images(directory):
     filename_pattern_original = os.path.join(directory, '*png')
     images_original = dask_image.imread.imread(filename_pattern_original)
-    renormalized_images_original = dask.array.asarray([ renormalize_8bit(images_original[z]) for z in range(images_original.shape[0]) ])
+    renormalized_images_original = dask.array.asarray([ renormalize_8bit(images_original[z]) for z in range(images_original.shape[0])])
     return renormalized_images_original
 
 
@@ -127,6 +127,16 @@ def load_saved_masks(mod_mask_dir):
     base_label = images_label
     return base_label, [x.name for x in sorted(list(Path(mod_mask_dir).glob('./*png')))]
 
+
+def load_mask_masks(mask_dir):
+    filename_pattern_label = os.path.join(mask_dir, '*png')
+    images_label = dask_image.imread.imread(filename_pattern_label)
+    if images_label.max() == 1:
+        pass
+    else:
+        images_label = 1 * (images_label > 0)
+    base_label = images_label
+    return base_label.compute()
 
 def load_raw_masks(raw_mask_dir):
     filename_pattern_raw = os.path.join(raw_mask_dir, '*png')
