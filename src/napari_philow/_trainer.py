@@ -197,10 +197,7 @@ class Trainer(QWidget):
         self.btn5.setText('start training')
 
     def trainer(self):
-        if self.checkBox_cristae.isChecked():
-            train_cristae = True
-        else:
-            train_cirstae = False
+        train_cristae = self.checkBox_cristae.isChecked()
         if self.worker:
             if self.worker.is_running:
                 self.btn5.setText('stopping...')
