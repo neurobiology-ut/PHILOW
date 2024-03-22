@@ -136,7 +136,10 @@ class Trainer(QWidget):
             self.lbl_cristae.setText(self.cristaepath)
 
     def get_newest_csv(self):
-        csvs = sorted(list(Path(self.labelpath).glob('./*csv')))
+        if self.cristaepath:
+            csvs = sorted(list(Path(self.cristaepath).glob('./*csv')))
+        else:
+            csvs = sorted(list(Path(self.labelpath).glob('./*csv')))
         csv = pd.read_csv(str(csvs[-1]), index_col=0)
         return csv
 
