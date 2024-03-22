@@ -12,12 +12,13 @@ import pandas as pd
 from PIL import Image
 from napari.qt.threading import create_worker
 from qtpy.QtWidgets import QWidget, QPushButton, QSizePolicy, QLabel, QVBoxLayout, QFileDialog, QCheckBox, QSpinBox
+from qtpy.QtCore import Qt
 from segmentation_models_pytorch import UnetPlusPlus
 from torch import optim
 from torch.utils import data
 
-from napari_philow._utils import combine_blocks
-from napari_philow.segmentation.dataset import PHILOWDataset, ImageTransform
+from napari_philow._utils import combine_blocks, preprocess_cristae
+from napari_philow.segmentation.dataset import PHILOWDataset, ImageTransform, CristaeDataset, CristaeImageTransform
 from napari_philow.segmentation.loss import DiceBCELoss
 from napari_philow.segmentation.train import train_model
 
@@ -49,7 +50,7 @@ class Trainer(QWidget):
         self.btn4.clicked.connect(self.show_dialog_prev_model)
         self.btn5 = QPushButton('start training', self)
         self.btn5.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.btn5.clicked.connect(self.start_training)
+        self.btn5.clicked.connect(self.trainer)
         self.lbl5 = QLabel('epochs', self)
         self.epoch = QSpinBox(maximum=1000, value=400)
         self.checkBox = QCheckBox("Resize to 256x256?")
@@ -58,6 +59,12 @@ class Trainer(QWidget):
         self.checkBox_cristae = QCheckBox("Cristae segmentation mode")
         self.checkBox_cristae.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.checkBox_cristae.stateChanged.connect(self.toggle_checkboxes)
+        self.lbl_cristae = QLabel('cristae label dir', self)
+        self.btn_cristae = QPushButton('open', self)
+        self.btn_cristae.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.btn_cristae.clicked.connect(self.show_dialog_cristae)
+        self.lbl_cristae.setVisible(False)
+        self.btn_cristae.setVisible(False)
 
         with plt.style.context('dark_background'):
             self.canvas = FigureCanvas(Figure(figsize=(3, 5)))
@@ -82,6 +89,7 @@ class Trainer(QWidget):
         vbox.addWidget(combine_blocks(self.btn2, self.lbl2))
         vbox.addWidget(combine_blocks(self.btn3, self.lbl3))
         vbox.addWidget(combine_blocks(self.btn4, self.lbl4))
+        vbox.addWidget(combine_blocks(self.btn_cristae, self.lbl_cristae))
         vbox.addWidget(combine_blocks(self.lbl5, self.epoch))
         vbox.addWidget(self.checkBox)
         vbox.addWidget(self.checkBox_split)
@@ -120,6 +128,13 @@ class Trainer(QWidget):
             self.prev_modelpath = f_name
             self.lbl4.setText(self.prev_modelpath)
 
+    def show_dialog_cristae(self):
+        default_path = max(self.opath, self.labelpath, os.path.expanduser('~'))
+        f_name = QFileDialog.getExistingDirectory(self, 'Open Directory', default_path)
+        if f_name:
+            self.cristaepath = f_name
+            self.lbl_cristae.setText(self.cristaepath)
+
     def get_newest_csv(self):
         csvs = sorted(list(Path(self.labelpath).glob('./*csv')))
         csv = pd.read_csv(str(csvs[-1]), index_col=0)
@@ -129,15 +144,13 @@ class Trainer(QWidget):
         if state == Qt.Checked:
             self.checkBox.setVisible(False)
             self.checkBox_split.setVisible(False)
+            self.btn_cristae.setVisible(True)
+            self.lbl_cristae.setVisible(True)
         else:
             self.checkBox.setVisible(True)
             self.checkBox_split.setVisible(True)
-
-    def start_training(self):
-        if self.checkBox_cristae.isChecked():
-            self.trainer_cristae()
-        else:
-            self.trainer()
+            self.btn_cristae.setVisible(False)
+            self.lbl_cristae.setVisible(False)
 
     def update_layer(self, value):
         self.axes.clear()
@@ -184,6 +197,10 @@ class Trainer(QWidget):
         self.btn5.setText('start training')
 
     def trainer(self):
+        if self.checkBox_cristae.isChecked():
+            train_cristae = True
+        else:
+            train_cirstae = False
         if self.worker:
             if self.worker.is_running:
                 self.btn5.setText('stopping...')
@@ -197,49 +214,66 @@ class Trainer(QWidget):
             names = list(csv[csv['train'] == 'Checked']['filename'])
             test_names = [name for name in list(csv[csv['train'] != 'Checked']['filename']) if
                           os.path.isfile(os.path.join(self.opath, name))]
-            print(test_names)
-            if self.checkBox_split.isChecked():
-                np.random.shuffle(names)
-                split_index = 9 * len(names) // 10
-                train_names = names[0: split_index]
-                val_names = names[split_index:]
-            else:
-                train_names = names
-
-            w, h = Image.open(os.path.join(self.opath, names[0])).size
-
-            batch_size = min(math.ceil(len(train_names) / 10), 4)
-            print('batchsize = ', batch_size)
-
-            train_dataset = PHILOWDataset(self.opath, self.labelpath, train_names, 'train', ImageTransform(512),
-                                          multiplier=math.ceil(max(w, h) / 512))
-            train_dataloader = data.DataLoader(
-                train_dataset, batch_size=batch_size, shuffle=True, num_workers=max(1, os.cpu_count() - 2))
-            if len(test_names) != 0:
-                test_dataset = PHILOWDataset(self.opath, self.labelpath, test_names, 'val', ImageTransform(512))
-                test_dataloader = data.DataLoader(test_dataset, batch_size=1, shuffle=True, num_workers=1)
-            else:
-                test_dataloader = None
-
-            if self.checkBox_split.isChecked():
-                val_dataset = PHILOWDataset(self.opath, self.labelpath, val_names, 'val', ImageTransform(512),
-                                            multiplier=math.ceil(max(w, h) / 512))
-                val_dataloader = data.DataLoader(
-                    val_dataset, batch_size=batch_size, shuffle=True, num_workers=max(1, os.cpu_count() - 2))
-            else:
-                val_dataloader = None
-
-            # 辞書オブジェクトにまとめる
-            dataloaders_dict = {"train": train_dataloader, "val": val_dataloader, "test": test_dataloader}
-
-            print(dataloaders_dict)
-
             # GPUが使えるかを確認
             device = torch.device("cuda:0" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
             print("使用デバイス：", device)
 
-            net = UnetPlusPlus(encoder_name="efficientnet-b0", encoder_weights="imagenet", in_channels=1, classes=1,
-                               activation='sigmoid')
+            if train_cristae:
+                w, h = 1000, 1000
+                ori_imgs, label_imgs = preprocess_cristae(self.oopath, self.labelpath, self.cristaepath, names)
+                assert ori_imgs.shape[0] == label_imgs.shape[0]
+                assert ori_imgs.shape[0] > 1, 'not enough data'
+                split_index = 9 * len(names) // 10
+                train_imgs, train_labels = ori_imgs[:split_index], label_imgs[:split_index]
+                val_imgs, val_labels = ori_imgs[split_index:], label_imgs[split_index:]
+                batch_size = min(math.ceil(train_imgs.shape[0] / 10), 4)
+                train_dataset = CristaeDataset(train_imgs, train_labels, 'train', CristaeImageTransform(512),
+                                               multiplier=math.ceil(max(w, h) / 512))
+                train_dataloader = data.DataLoader(
+                    train_dataset, batch_size=batch_size, shuffle=True, num_workers=max(1, os.cpu_count() - 2))
+                val_dataset = CristaeDataset(val_imgs, val_labels, 'val', CristaeImageTransform(512),
+                                             multiplier=math.ceil(max(w, h) / 512))
+                val_dataloader = data.DataLoader(
+                    val_dataset, batch_size=batch_size, shuffle=True, num_workers=max(1, os.cpu_count() - 2))
+                test_dataloader = None
+                net = UnetPlusPlus(encoder_name="efficientnet-b0", encoder_weights="imagenet", in_channels=1, classes=3,
+                                   activation='sigmoid')
+
+            else:
+                if self.checkBox_split.isChecked():
+                    assert len(names) > 1, 'not enough data'
+                    np.random.shuffle(names)
+                    split_index = 9 * len(names) // 10
+                    train_names = names[0: split_index]
+                    val_names = names[split_index:]
+                else:
+                    train_names = names
+
+                batch_size = min(math.ceil(len(train_names) / 10), 4)
+                w, h = Image.open(os.path.join(self.opath, names[0])).size
+                train_dataset = PHILOWDataset(self.opath, self.labelpath, train_names, 'train', ImageTransform(512),
+                                              multiplier=math.ceil(max(w, h) / 512))
+                train_dataloader = data.DataLoader(
+                    train_dataset, batch_size=batch_size, shuffle=True, num_workers=max(1, os.cpu_count() - 2))
+                if len(test_names) != 0:
+                    test_dataset = PHILOWDataset(self.opath, self.labelpath, test_names, 'val', ImageTransform(512))
+                    test_dataloader = data.DataLoader(test_dataset, batch_size=1, shuffle=True, num_workers=1)
+                else:
+                    test_dataloader = None
+                if self.checkBox_split.isChecked():
+                    val_dataset = PHILOWDataset(self.opath, self.labelpath, val_names, 'val', ImageTransform(512),
+                                                multiplier=math.ceil(max(w, h) / 512))
+                    val_dataloader = data.DataLoader(
+                        val_dataset, batch_size=batch_size, shuffle=True, num_workers=max(1, os.cpu_count() - 2))
+                else:
+                    val_dataloader = None
+                net = UnetPlusPlus(encoder_name="efficientnet-b0", encoder_weights="imagenet", in_channels=1, classes=1,
+                                   activation='sigmoid')
+            # 辞書オブジェクトにまとめる
+            dataloaders_dict = {"train": train_dataloader, "val": val_dataloader, "test": test_dataloader}
+
+            print(dataloaders_dict)
+            print('batchsize = ', batch_size)
 
             optimizer = optim.AdamW(net.parameters())
 
@@ -269,3 +303,6 @@ class Trainer(QWidget):
             self.worker.start()
             self.stop_training = False
             self.btn5.setText('stop')
+
+
+

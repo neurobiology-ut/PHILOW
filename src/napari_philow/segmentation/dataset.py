@@ -56,7 +56,7 @@ class PHILOWDataset(Dataset):
         return functional.to_tensor(img), functional.to_tensor(mask)
 
 
-class PHILOWCristaeDataset(Dataset):
+class CristaeDataset(Dataset):
     def __init__(self, images, labels, names, phase, transform, multiplier=1):
         """PHILOW Dataset. Read images, apply augmentation and preprocessing transformations.
         Args:
