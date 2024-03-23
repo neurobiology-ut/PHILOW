@@ -220,7 +220,7 @@ class Trainer(QWidget):
 
             if train_cristae:
                 w, h = 1000, 1000
-                ori_imgs, label_imgs = preprocess_cristae(self.oopath, self.labelpath, self.cristaepath, names)
+                ori_imgs, label_imgs = preprocess_cristae(self.opath, self.labelpath, self.cristaepath, names)
                 assert ori_imgs.shape[0] == label_imgs.shape[0]
                 assert ori_imgs.shape[0] > 1, 'not enough data'
                 split_index = 9 * len(names) // 10
