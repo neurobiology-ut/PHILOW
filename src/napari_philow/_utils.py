@@ -206,8 +206,8 @@ def preprocess_cristae(ori_path, mito_path, cristae_path, names, crop_size=1000)
     # crop
     cropped_ori_imgs = []
     cropped_cristae_imgs = []
-    H = ori_imgs.shape[1] // crop_size + 1
-    W = ori_imgs.shape[2] // crop_size + 1
+    H = ori_imgs[0].shape[0] // crop_size + 1
+    W = ori_imgs[0].shape[1] // crop_size + 1
     for z in range(len(ori_imgs)):
         margin_ori_img = np.zeros((H * crop_size, W * crop_size), ori_imgs[0].dtype)
         margin_ori_img[:ori_imgs[0].shape[0], :ori_imgs[0].shape[1]] = ori_imgs[z]
