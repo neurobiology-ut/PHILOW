@@ -39,7 +39,7 @@ class PHILOWDataset(Dataset):
         # read data
         # img = Image.open(os.path.join(self.images_dir, str(self.names[index]))).convert("L")
         # img = Image.fromarray(renormalize_8bit(np.array(img)))
-        index = index % len(self.names)  # Use modulo to wrap around the names list
+        index = index % len(self.names)  # Use module to wrap around the names list
         img = Image.open(os.path.join(self.images_dir, str(self.names[index])))
         if img.mode == "I":
             img = Image.fromarray(renormalize_8bit(np.array(img)))
@@ -69,7 +69,7 @@ class CristaeDataset(Dataset):
         """
         self.images = images
         self.labels = labels
-        self.names = names * multiplier
+        self.names = names
         self.phase = phase
         self.transform = transform
         self.multiplier = multiplier
@@ -82,12 +82,13 @@ class CristaeDataset(Dataset):
         return img, mask
 
     def pull_item(self, index):
-        index = index % len(self.names)  # Use modulo to wrap around the names list
+        index = index % len(self.names)  # Use module to wrap around the names list
         img = self.images[index]
         mask = self.labels[index]
+        if img.dtype == "uint16":
+            img = renormalize_8bit(img)
         img = Image.fromarray(img)
-        mask = Image.fromarray(mask)
-        # print(img.mode, mask.mode)
+        mask = Image.fromarray(mask.astype(np.uint8))
         img, mask = self.transform(self.phase, img, mask)
         return functional.to_tensor(img), functional.to_tensor(mask)
 

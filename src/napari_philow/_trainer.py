@@ -223,11 +223,13 @@ class Trainer(QWidget):
                 ori_imgs, label_imgs = preprocess_cristae(self.opath, self.labelpath, self.cristaepath, names)
                 assert ori_imgs.shape[0] == label_imgs.shape[0]
                 assert ori_imgs.shape[0] > 1, 'not enough data'
-                split_index = 9 * len(names) // 10
+
+                dataset_index = list(i for i in range(ori_imgs.shape[0]))
+                split_index = 9 * len(dataset_index) // 10
                 train_imgs, train_labels = ori_imgs[:split_index], label_imgs[:split_index]
                 val_imgs, val_labels = ori_imgs[split_index:], label_imgs[split_index:]
-                train_names = names[:split_index]
-                val_names = names[split_index:]
+                train_names = dataset_index[0:split_index]
+                val_names = dataset_index[split_index:]
                 batch_size = min(math.ceil(train_imgs.shape[0] / 10), 4)
                 train_dataset = CristaeDataset(train_imgs, train_labels, train_names, 'train', CristaeImageTransform(512),
                                                multiplier=math.ceil(max(w, h) / 512))
