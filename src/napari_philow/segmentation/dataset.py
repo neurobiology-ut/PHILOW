@@ -39,7 +39,7 @@ class PHILOWDataset(Dataset):
         # read data
         # img = Image.open(os.path.join(self.images_dir, str(self.names[index]))).convert("L")
         # img = Image.fromarray(renormalize_8bit(np.array(img)))
-        index = index % len(self.names)  # Use modulo to wrap around the names list
+        index = index % len(self.names)  # Use module to wrap around the names list
         img = Image.open(os.path.join(self.images_dir, str(self.names[index])))
         if img.mode == "I":
             img = Image.fromarray(renormalize_8bit(np.array(img)))
@@ -57,7 +57,7 @@ class PHILOWDataset(Dataset):
 
 
 class CristaeDataset(Dataset):
-    def __init__(self, images, labels, names, phase, transform, multiplier=1):
+    def __init__(self, images, labels, phase, transform, multiplier=1):
         """PHILOW Dataset. Read images, apply augmentation and preprocessing transformations.
         Args:
             images (np.ndarray): images :: (Z, Y, X)
@@ -69,25 +69,25 @@ class CristaeDataset(Dataset):
         """
         self.images = images
         self.labels = labels
-        self.names = names * multiplier
         self.phase = phase
         self.transform = transform
         self.multiplier = multiplier
 
     def __len__(self):
-        return len(self.names) * self.multiplier
+        return len(self.images) * self.multiplier
 
     def __getitem__(self, index):
         img, mask = self.pull_item(index)
         return img, mask
 
     def pull_item(self, index):
-        index = index % len(self.names)  # Use modulo to wrap around the names list
+        index = index % len(self.images)  # Use module to wrap around the names list
         img = self.images[index]
         mask = self.labels[index]
+        if img.dtype == "uint16":
+            img = renormalize_8bit(img)
         img = Image.fromarray(img)
-        mask = Image.fromarray(mask)
-        # print(img.mode, mask.mode)
+        mask = Image.fromarray(mask.astype(np.uint8))
         img, mask = self.transform(self.phase, img, mask)
         return functional.to_tensor(img), functional.to_tensor(mask)
 

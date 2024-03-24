@@ -136,7 +136,10 @@ class Trainer(QWidget):
             self.lbl_cristae.setText(self.cristaepath)
 
     def get_newest_csv(self):
-        csvs = sorted(list(Path(self.labelpath).glob('./*csv')))
+        if self.cristaepath:
+            csvs = sorted(list(Path(self.cristaepath).glob('./*csv')))
+        else:
+            csvs = sorted(list(Path(self.labelpath).glob('./*csv')))
         csv = pd.read_csv(str(csvs[-1]), index_col=0)
         return csv
 
@@ -217,10 +220,10 @@ class Trainer(QWidget):
 
             if train_cristae:
                 w, h = 1000, 1000
-                ori_imgs, label_imgs = preprocess_cristae(self.oopath, self.labelpath, self.cristaepath, names)
+                ori_imgs, label_imgs = preprocess_cristae(self.opath, self.labelpath, self.cristaepath, names)
                 assert ori_imgs.shape[0] == label_imgs.shape[0]
                 assert ori_imgs.shape[0] > 1, 'not enough data'
-                split_index = 9 * len(names) // 10
+                split_index = 9 * ori_imgs.shape[0] // 10
                 train_imgs, train_labels = ori_imgs[:split_index], label_imgs[:split_index]
                 val_imgs, val_labels = ori_imgs[split_index:], label_imgs[split_index:]
                 batch_size = min(math.ceil(train_imgs.shape[0] / 10), 4)

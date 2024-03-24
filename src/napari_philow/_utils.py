@@ -191,7 +191,7 @@ def preprocess_cristae(ori_path, mito_path, cristae_path, names, crop_size=1000)
     cristae_imgs = [io.imread(os.path.join(cristae_path, name), as_gray=True) for name in names]
     # make gap
     preprocessed_imgs = []
-    for i in range(cristae_imgs.shape[0]):
+    for i in range(len(cristae_imgs)):
         dilated_cristae_img = morphology.binary_dilation(cristae_imgs[i], morphology.disk(30))
         dilated_cristae_img = dilated_cristae_img - cristae_imgs[i]
         dilated_cristae_img = dilated_cristae_img * mito_imgs[i]
@@ -206,11 +206,11 @@ def preprocess_cristae(ori_path, mito_path, cristae_path, names, crop_size=1000)
     # crop
     cropped_ori_imgs = []
     cropped_cristae_imgs = []
-    H = ori_imgs.shape[1] // crop_size + 1
-    W = ori_imgs.shape[2] // crop_size + 1
-    for z in range(ori_imgs.shape[0]):
-        margin_ori_img = np.zeros((H * crop_size, W * crop_size), ori_imgs.dtype)
-        margin_ori_img[:ori_imgs.shape[1], :ori_imgs.shape[2]] = ori_imgs[z]
+    H = ori_imgs[0].shape[0] // crop_size + 1
+    W = ori_imgs[0].shape[1] // crop_size + 1
+    for z in range(len(ori_imgs)):
+        margin_ori_img = np.zeros((H * crop_size, W * crop_size), ori_imgs[0].dtype)
+        margin_ori_img[:ori_imgs[0].shape[0], :ori_imgs[0].shape[1]] = ori_imgs[z]
         margin_label_img = np.zeros((H * crop_size, W * crop_size, preprocessed_imgs.shape[3]), preprocessed_imgs.dtype)
         margin_label_img[:preprocessed_imgs.shape[1], :preprocessed_imgs.shape[2]] = preprocessed_imgs[z]
         for h in range(H):
