@@ -57,7 +57,7 @@ class PHILOWDataset(Dataset):
 
 
 class CristaeDataset(Dataset):
-    def __init__(self, images, labels, names, phase, transform, multiplier=1):
+    def __init__(self, images, labels, phase, transform, multiplier=1):
         """PHILOW Dataset. Read images, apply augmentation and preprocessing transformations.
         Args:
             images (np.ndarray): images :: (Z, Y, X)
@@ -69,20 +69,19 @@ class CristaeDataset(Dataset):
         """
         self.images = images
         self.labels = labels
-        self.names = names
         self.phase = phase
         self.transform = transform
         self.multiplier = multiplier
 
     def __len__(self):
-        return len(self.names) * self.multiplier
+        return len(self.images) * self.multiplier
 
     def __getitem__(self, index):
         img, mask = self.pull_item(index)
         return img, mask
 
     def pull_item(self, index):
-        index = index % len(self.names)  # Use module to wrap around the names list
+        index = index % len(self.images)  # Use module to wrap around the names list
         img = self.images[index]
         mask = self.labels[index]
         if img.dtype == "uint16":
