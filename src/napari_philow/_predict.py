@@ -97,6 +97,7 @@ def predict_1ax(ori_filenames, net, out_dir, size, device, mask_dir=None, out_ch
         image = Image.fromarray(image)
         if mask_dir is not None:
             pred_imgs_ave = 255 * pred_large_image(image, net, device, size, is_3class=True)
+            pred_imgs_ave = np.where(mask == 0, 0, pred_imgs_ave)
         else:
             pred_imgs_ave = 255 * pred_large_image(image, net, device, size)
         # threshed
