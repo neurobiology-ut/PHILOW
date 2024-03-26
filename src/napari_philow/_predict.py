@@ -69,7 +69,7 @@ def predict_3ax(o_path, net, out_dir, size, device):
         io.imsave(f'{out_dir_merge}_raw/{os.path.basename(filenames[i])}', img_.astype(np.uint8))
 
 
-def predict_1ax(ori_filenames, net, out_dir, size, device):
+def predict_1ax(ori_filenames, net, out_dir, size, device, mask_dir=None):
     """
     predict 1 axis and merge the prediction
     Args:
@@ -78,6 +78,7 @@ def predict_1ax(ori_filenames, net, out_dir, size, device):
         out_dir (str): output directory
         size (int):  patch size
         device (str): e.g. 'cpu', 'cuda:0'
+        mask_dir (str): dir path for mask which is used for mask original image before prediction
     """
     os.makedirs(out_dir, exist_ok=True)
     out_dir_merge = os.path.join(out_dir, 'merged_prediction')
