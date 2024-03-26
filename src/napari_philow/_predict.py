@@ -69,7 +69,7 @@ def predict_3ax(o_path, net, out_dir, size, device):
         io.imsave(f'{out_dir_merge}_raw/{os.path.basename(filenames[i])}', img_.astype(np.uint8))
 
 
-def predict_1ax(ori_filenames, net, out_dir, size, device, mask_dir=None):
+def predict_1ax(ori_filenames, net, out_dir, size, device, mask_dir=None, out_channel=None):
     """
     predict 1 axis and merge the prediction
     Args:
@@ -79,6 +79,7 @@ def predict_1ax(ori_filenames, net, out_dir, size, device, mask_dir=None):
         size (int):  patch size
         device (str): e.g. 'cpu', 'cuda:0'
         mask_dir (str): dir path for mask which is used for mask original image before prediction
+        out_channel (list): list of channel index to output
     """
     os.makedirs(out_dir, exist_ok=True)
     out_dir_merge = os.path.join(out_dir, 'merged_prediction')
@@ -87,13 +88,23 @@ def predict_1ax(ori_filenames, net, out_dir, size, device, mask_dir=None):
 
     for filename in ori_filenames:
         image = Image.open(str(filename))
-        image = renormalize_8bit(np.array(image))
+        image_arr = np.array(image)
+        if mask_dir is not None:
+            mask = Image.open(f"{mask_dir}/{filename.name}")
+            mask = np.array(mask)
+            image_arr = np.where(mask == 0, 0, image_arr)
+        image = renormalize_8bit(image_arr)
         image = Image.fromarray(image)
-        mito_imgs_ave = 255 * pred_large_image(image, net, device, size)
+        if mask_dir is not None:
+            pred_imgs_ave = 255 * pred_large_image(image, net, device, size, is_3class=True)
+        else:
+            pred_imgs_ave = 255 * pred_large_image(image, net, device, size)
         # threshed
-        img = np.where(mito_imgs_ave >= 127, 1, 0)
+        if out_channel is not None:
+            pred_imgs_ave = pred_imgs_ave[:, :, out_channel]
+        img = np.where(pred_imgs_ave >= 127, 1, 0)
         io.imsave(f"{out_dir_merge}/{filename.name}", img.astype("uint8"))
 
         # raw
-        img_ = np.where(mito_imgs_ave[:, :] >= 127, mito_imgs_ave, 0)
+        img_ = np.where(pred_imgs_ave >= 127, pred_imgs_ave, 0)
         io.imsave(f'{out_dir_merge}_raw/{filename.name}', img_.astype('uint8'))

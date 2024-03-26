@@ -166,7 +166,7 @@ class Predicter(QWidget):
     def predict_single(self):
         try:
             if self.checkBox_cristae.isChecked() is True:
-                predict_1ax(self.ori_filenames, self.net, self.outpath, self.size, self.device, mask_dir=self.mitopath)
+                predict_1ax(self.ori_filenames, self.net, self.outpath, self.size, self.device, mask_dir=self.mitopath, out_channel=[0])
             else:
                 predict_1ax(self.ori_filenames, self.net, self.outpath, self.size, self.device)
         except Exception as e:
