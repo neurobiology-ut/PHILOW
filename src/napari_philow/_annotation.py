@@ -153,10 +153,10 @@ class AnnotationMode(QWidget):
         self._viewer.add_labels(base_label, name='base')
         if raw is not None:
             if self.checkBox_3d.isChecked():
-                self._viewer.add_image(ndimage.gaussian_filter(raw, sigma=(0, 3, 3)), colormap='magenta', name='low_confident',
+                self._viewer.add_image(ndimage.gaussian_filter(raw, sigma=3), colormap='magenta', name='low_confident',
                                        blending='additive')
             else:
-                self._viewer.add_image(ndimage.gaussian_filter(raw, sigma=3), colormap='magenta', name='low_confident',
+                self._viewer.add_image(ndimage.gaussian_filter(raw, sigma=(0, 3, 3)), colormap='magenta', name='low_confident',
                                        blending='additive')
         else:
             pass
