@@ -47,6 +47,8 @@ class AnnotationMode(QWidget):
         self.btn_mask.hide()
         self.lbl_mask.hide()
 
+        self.checkBox_3d = QCheckBox("If you are labeling 3D data, please check this box")
+
         self.btn4 = QPushButton('Start tracing', self)
         self.btn4.clicked.connect(self.launch)
 
@@ -70,6 +72,7 @@ class AnnotationMode(QWidget):
 
         layout.addLayout(form_layout)
         layout.addWidget(self.checkBox)
+        layout.addWidget(self.checkBox_3d)
         layout.addWidget(self.btn4)
 
         self.setLayout(layout)
@@ -149,8 +152,12 @@ class AnnotationMode(QWidget):
         self._viewer.add_image(images_original, contrast_limits=[0, 255])
         self._viewer.add_labels(base_label, name='base')
         if raw is not None:
-            self._viewer.add_image(ndimage.gaussian_filter(raw, sigma=3), colormap='magenta', name='low_confident',
-                                   blending='additive')
+            if self.checkBox_3d.isChecked():
+                self._viewer.add_image(ndimage.gaussian_filter(raw, sigma=3), colormap='magenta', name='low_confident',
+                                       blending='additive')
+            else:
+                self._viewer.add_image(ndimage.gaussian_filter(raw, sigma=(0, 3, 3)), colormap='magenta', name='low_confident',
+                                       blending='additive')
         else:
             pass
         if mask is not None:
