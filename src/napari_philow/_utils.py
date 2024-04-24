@@ -186,13 +186,7 @@ def show_so_layer(args):
 
 
 def preprocess_cristae(ori_path, mito_path, cristae_path, names, crop_size=1000):
-    ori_imgs = []
-    for name in names:
-        ori_img = io.imread(os.path.join(ori_path, name), as_gray=True)
-        if ori_img.dtype == np.uint8:
-            ori_imgs.append(ori_img)
-        else:
-            ori_imgs.append(renormalize_8bit(ori_img))
+    ori_imgs = [renormalize_8bit(io.imread(os.path.join(ori_path, name), as_gray=True)) for name in names]
     mito_imgs = [io.imread(os.path.join(mito_path, name), as_gray=True) for name in names]
     cristae_imgs = [io.imread(os.path.join(cristae_path, name), as_gray=True) for name in names]
 
