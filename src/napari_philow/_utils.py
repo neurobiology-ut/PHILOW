@@ -9,9 +9,8 @@ from qtpy.QtWidgets import QWidget, QHBoxLayout, QSlider, QLabel
 from qtpy.QtCore import Qt
 import numpy as np
 from scipy import ndimage
-from skimage import io, morphology, img_as_ubyte
+from skimage import io, morphology
 import pandas as pd
-from PIL import Image
 
 
 def renormalize_8bit(image):
@@ -189,13 +188,14 @@ def show_so_layer(args):
 def preprocess_cristae(ori_path, mito_path, cristae_path, names, crop_size=1000):
     ori_imgs = []
     for name in names:
-        ori_img = Image.open(os.path.join(ori_path, name))
-        if ori_img.mode == "I":
-            ori_imgs.append(np.array(Image.fromarray(renormalize_8bit(np.array(ori_img)))))
+        ori_img = io.imread(os.path.join(ori_path, name), as_gray=True)
+        if ori_img.dtype == np.uint8:
+            ori_imgs.append(ori_img)
         else:
-            ori_imgs.append(np.array(ori_img.convert("L")))
-    mito_imgs = [ np.array(Image.open(os.path.join(mito_path, name)).convert("L")) for name in names ]
-    cristae_imgs = [ np.array(Image.open(os.path.join(cristae_path, name)).convert("L")) for name in names ]
+            ori_imgs.append(renormalize_8bit(ori_img))
+    mito_imgs = [io.imread(os.path.join(mito_path, name), as_gray=True) for name in names]
+    cristae_imgs = [io.imread(os.path.join(cristae_path, name), as_gray=True) for name in names]
+
     # make gap
     preprocessed_imgs = []
     for i in range(len(cristae_imgs)):
