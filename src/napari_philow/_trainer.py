@@ -32,6 +32,9 @@ class Trainer(QWidget):
         self.cristaepath = ""
         self.modelpath = ""
         self.prev_modelpath = ""
+        self.checkBox_cristae = QCheckBox("Cristae segmentation mode")
+        self.checkBox_cristae.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.checkBox_cristae.stateChanged.connect(self.toggle_checkboxes)
         self.lbl = QLabel('original dir', self)
         self.btn1 = QPushButton('open', self)
         self.btn1.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
@@ -56,9 +59,6 @@ class Trainer(QWidget):
         self.checkBox = QCheckBox("Resize to 256x256?")
         self.checkBox_split = QCheckBox("Split and create validation data from training data?")
         self.checkBox.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.checkBox_cristae = QCheckBox("Cristae segmentation mode")
-        self.checkBox_cristae.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.checkBox_cristae.stateChanged.connect(self.toggle_checkboxes)
         self.lbl_cristae = QLabel('cristae label dir', self)
         self.btn_cristae = QPushButton('open', self)
         self.btn_cristae.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
@@ -85,15 +85,15 @@ class Trainer(QWidget):
 
     def build(self):
         vbox = QVBoxLayout()
+        vbox.addWidget(self.checkBox_cristae)
         vbox.addWidget(combine_blocks(self.btn1, self.lbl))
         vbox.addWidget(combine_blocks(self.btn2, self.lbl2))
         vbox.addWidget(combine_blocks(self.btn3, self.lbl3))
         vbox.addWidget(combine_blocks(self.btn4, self.lbl4))
-        vbox.addWidget(combine_blocks(self.btn_cristae, self.lbl_cristae))
         vbox.addWidget(combine_blocks(self.lbl5, self.epoch))
         vbox.addWidget(self.checkBox)
         vbox.addWidget(self.checkBox_split)
-        vbox.addWidget(self.checkBox_cristae)
+        vbox.addWidget(combine_blocks(self.btn_cristae, self.lbl_cristae))
         vbox.addWidget(self.btn5)
         vbox.addWidget(self.canvas)
 
@@ -149,11 +149,13 @@ class Trainer(QWidget):
             self.checkBox_split.setVisible(False)
             self.btn_cristae.setVisible(True)
             self.lbl_cristae.setVisible(True)
+            self.lbl2.setText("mito mask dir")
         else:
             self.checkBox.setVisible(True)
             self.checkBox_split.setVisible(True)
             self.btn_cristae.setVisible(False)
             self.lbl_cristae.setVisible(False)
+            self.lbl2.setText("label dir")
 
     def update_layer(self, value):
         self.axes.clear()
