@@ -43,8 +43,8 @@ class Predicter(QWidget):
         self.checkBox_cristae = QCheckBox("Use cristae inference mode")  # 追加: クリステの推論モードを使うかどうかのチェックボックス
         self.checkBox_cristae.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.checkBox_cristae.stateChanged.connect(self.toggle_mito_dir)  # 追加: チェックボックスの状態が変更されたときのシグナル接続
-        self.lbl_mito = QLabel('mitochondria label dir', self)  # 追加: ミトコンドリアのラベルディレクトリ選択用のラベル
-        self.btn_mito = QPushButton('open', self)  # 追加: ミトコンドリアのラベルディレクトリ選択用のボタン
+        self.lbl_mito = QLabel('mitochondria mask dir', self)  # 追加: ミトコンドリアのラベルディレクトリ選択用のラベル
+        self.btn_mito = QPushButton('open', self)
         self.btn_mito.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.btn_mito.clicked.connect(self.show_dialog_mito)
         self.btn_mito.setVisible(False)  # 追加: 初期状態では非表示
@@ -132,7 +132,7 @@ class Predicter(QWidget):
 
     def predicter(self):
         if self.checkBox_cristae.isChecked() and not self.mitopath:
-            warnings.warn('Please select mitochondria label directory for cristae inference mode.', UserWarning)
+            warnings.warn('Please select mitochondria mask directory for cristae inference mode.', UserWarning)
             return
         self.ori_filenames = sorted(list(Path(self.opath).glob('./*.png')))
 
@@ -156,7 +156,10 @@ class Predicter(QWidget):
 
     def predict(self):
         try:
-            predict_3ax(self.opath, self.net, self.outpath, self.size, self.device)
+            if self.checkBox_cristae.isChecked() is True:
+                predict_3ax(self.opath, self.net, self.outpath, self.size, self.device, mask_dir=self.mitopath, out_channel=[0])
+            else:
+                predict_3ax(self.opath, self.net, self.outpath, self.size, self.device)
         except Exception as e:
             print(e)
         if self.labelpath != "":
