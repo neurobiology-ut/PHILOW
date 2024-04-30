@@ -94,8 +94,7 @@ def load_mask_masks(mask_dir):
         pass
     else:
         images_label = 1 * (images_label > 0)
-    base_label = images_label
-    return base_label.compute()
+    return images_label.compute()
 
 def load_raw_masks(raw_mask_dir):
     filename_pattern_raw = os.path.join(raw_mask_dir, '*png')
