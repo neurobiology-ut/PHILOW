@@ -192,7 +192,7 @@ def preprocess_cristae(ori_path, mito_path, cristae_path, names, crop_size=1000)
     # make gap
     preprocessed_imgs = []
     for i in range(len(cristae_imgs)):
-        dilated_cristae_img = morphology.binary_dilation(cristae_imgs[i], morphology.disk(30))
+        dilated_cristae_img = morphology.binary_dilation(cristae_imgs[i], morphology.disk(5))
         dilated_cristae_img = dilated_cristae_img - cristae_imgs[i]
         dilated_cristae_img = dilated_cristae_img * mito_imgs[i]
         merged_img = np.concatenate([
