@@ -33,7 +33,7 @@ def predict_and_save(dask_arr, net, out_dir_axis, size, device, masks=None, out_
         else:
             pred_img = 255 * pred_large_image(Image.fromarray(dask_arr[i].compute()), net, device, size)
         if out_channel is not None:
-            pred_img = pred_img[:, :, out_channel]
+            pred_img = pred_img[:, :, out_channel][0]
         io.imsave(os.path.join(out_dir_axis, str(i).zfill(6) + '.png'), pred_img.astype(np.uint8))
 
 
