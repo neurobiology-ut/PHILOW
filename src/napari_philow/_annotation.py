@@ -7,13 +7,15 @@ from magicgui import magicgui
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from napari._qt.qthreading import thread_worker
-from qtpy.QtWidgets import QWidget, QPushButton, QSizePolicy, QLineEdit, QCheckBox, QLabel, QVBoxLayout, QFileDialog
+from qtpy.QtWidgets import QWidget, QPushButton, QSizePolicy, QLineEdit, QCheckBox, QLabel, QVBoxLayout, QFileDialog, QFormLayout
+from qtpy.QtCore import Qt
 from scipy import ndimage
 from skimage import io
+from vispy.color import Colormap
 
 from napari_philow._data_manager import Datamanager
-from napari_philow._utils import combine_blocks, load_images, load_saved_masks, load_raw_masks, label_ct, \
-    label_and_sort, save_masks, crop_img, show_so_layer
+from napari_philow._utils import load_images, load_saved_masks, load_raw_masks, label_ct, \
+    label_and_sort, save_masks, crop_img, show_so_layer, load_mask_masks
 
 
 class AnnotationMode(QWidget):
@@ -22,38 +24,58 @@ class AnnotationMode(QWidget):
         self._viewer = napari_viewer
         self.opath = ""
         self.modpath = ""
-        self.btn1 = QPushButton('open', self)
-        self.btn1.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.maskpath = ""
+        self.btn1 = QPushButton('Open', self)
         self.btn1.clicked.connect(self.show_dialog_o)
-        self.btn2 = QPushButton('open', self)
-        self.btn2.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.lbl1 = QLabel("Not selected")
+        self.btn2 = QPushButton('Open', self)
         self.btn2.clicked.connect(self.show_dialog_mod)
+        self.lbl2 = QLabel("Not selected")
 
         self.textbox = QLineEdit(self)
-        self.textbox.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
-        self.checkBox = QCheckBox("create new dataset?")
-        self.checkBox.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.checkBox = QCheckBox("Create new dataset?")
+
+        self.checkBox_mask = QCheckBox("Apply mask? (If you are labeling cristae, please apply a mitochondrial mask)")
+        self.checkBox_mask.stateChanged.connect(self.toggle_mask_button)
+
+        self.lbl_mask_dir = QLabel('Mask dir:')
+        self.btn_mask = QPushButton('Open', self)
+        self.btn_mask.clicked.connect(self.show_dialog_mask)
+        self.lbl_mask = QLabel("Not selected")
+        self.lbl_mask_dir.hide()
+        self.btn_mask.hide()
+        self.lbl_mask.hide()
+
+        self.checkBox_3d = QCheckBox("If you are labeling 3D data, please check this box")
 
         self.btn4 = QPushButton('Start tracing', self)
-        self.btn4.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.btn4.clicked.connect(self.launch)
-        self.lbl = QLabel('original dir', self)
-        self.lbl2 = QLabel('mask dir', self)
-        self.lbl4 = QLabel('model type (do not use word "train")', self)
+
         self.build()
 
         self.filenames = None
 
     def build(self):
-        vbox = QVBoxLayout()
-        vbox.addWidget(combine_blocks(self.btn1, self.lbl))
-        vbox.addWidget(combine_blocks(self.btn2, self.lbl2))
-        vbox.addWidget(combine_blocks(self.textbox, self.lbl4))
-        vbox.addWidget(self.checkBox)
-        vbox.addWidget(self.btn4)
+        layout = QVBoxLayout()
 
-        self.setLayout(vbox)
+        form_layout = QFormLayout()
+        form_layout.addRow('Original dir:', self.btn1)
+        form_layout.addRow(self.lbl1)
+        form_layout.addRow('Label dir:', self.btn2)
+        form_layout.addRow(self.lbl2)
+        form_layout.addRow(self.checkBox_mask)
+        form_layout.addRow(self.lbl_mask_dir, self.btn_mask)
+        form_layout.addRow(self.lbl_mask)
+        form_layout.addRow('Model type (do not use word "train"):', self.textbox)
+        form_layout.setLabelAlignment(Qt.AlignLeft)  # 左寄せに設定
+
+        layout.addLayout(form_layout)
+        layout.addWidget(self.checkBox)
+        layout.addWidget(self.checkBox_3d)
+        layout.addWidget(self.btn4)
+
+        self.setLayout(layout)
         self.show()
 
     def show_dialog_o(self):
@@ -61,14 +83,31 @@ class AnnotationMode(QWidget):
         f_name = QFileDialog.getExistingDirectory(self, 'Open Directory', default_path)
         if f_name:
             self.opath = f_name
-            self.lbl.setText(self.opath)
+            self.lbl1.setText(f_name)
 
     def show_dialog_mod(self):
         default_path = max(self.opath, self.modpath, os.path.expanduser('~'))
         f_name = QFileDialog.getExistingDirectory(self, 'Open Directory', default_path)
         if f_name:
             self.modpath = f_name
-            self.lbl2.setText(self.modpath)
+            self.lbl2.setText(f_name)
+
+    def show_dialog_mask(self):
+        default_path = max(self.opath, self.modpath, os.path.expanduser('~'))
+        f_name = QFileDialog.getExistingDirectory(self, 'Open Directory', default_path)
+        if f_name:
+            self.maskpath = f_name
+            self.lbl_mask.setText(f_name)
+
+    def toggle_mask_button(self, state):
+        if state == Qt.Checked:
+            self.lbl_mask_dir.show()
+            self.btn_mask.show()
+            self.lbl_mask.show()
+        else:
+            self.lbl_mask_dir.hide()
+            self.btn_mask.hide()
+            self.lbl_mask.hide()
 
     def launch(self):
         images = load_images(self.opath)
@@ -88,10 +127,14 @@ class AnnotationMode(QWidget):
             labels_raw = load_raw_masks(self.modpath + '_raw')
         except:
             labels_raw = None
+        if self.maskpath == "":
+            mask = None
+        else:
+            mask = load_mask_masks(self.maskpath)
         self._viewer.window.remove_dock_widget(self)
-        self.launch_anm(images, labels, labels_raw)
+        self.launch_anm(images, labels, labels_raw, mask)
 
-    def launch_anm(self, original, base, raw):
+    def launch_anm(self, original, base, raw, mask):
         global slicer
         global z_pos
         global layer
@@ -109,10 +152,16 @@ class AnnotationMode(QWidget):
         self._viewer.add_image(images_original, contrast_limits=[0, 255])
         self._viewer.add_labels(base_label, name='base')
         if raw is not None:
-            self._viewer.add_image(ndimage.gaussian_filter(raw, sigma=3), colormap='magenta', name='low_confident',
-                                   blending='additive')
+            if self.checkBox_3d.isChecked():
+                self._viewer.add_image(ndimage.gaussian_filter(raw, sigma=3), colormap='magenta', name='low_confident',
+                                       blending='additive')
+            else:
+                self._viewer.add_image(ndimage.gaussian_filter(raw, sigma=(0, 3, 3)), colormap='magenta', name='low_confident',
+                                       blending='additive')
         else:
             pass
+        if mask is not None:
+            self._viewer.add_image(mask, name='mask', blending='minimum')
 
         @thread_worker(connect={"returned": show_so_layer})
         def create_label(viewer):

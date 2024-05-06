@@ -31,8 +31,18 @@ class RandomRotation(object):
 
 
 class RandomBrightness(object):
-    def __call__(self, img, anno_class_img):
-        return transforms.ColorJitter(brightness=0.5)(img), anno_class_img
+    def __call__(self, img, mask):
+        """
+        Args:
+            img (PIL Image or Tensor):
+            mask (PIL Image or Tensor):
+        Returns:
+            Tuple of PIL Image or Tensor: Transformed image and mask
+        """
+        if np.random.randint(2):
+            brightness_factor = np.random.default_rng().uniform(0.5,1.5)
+            img = functional.adjust_brightness(img, brightness_factor)
+        return img, mask
 
 
 class RandomCrop(object):

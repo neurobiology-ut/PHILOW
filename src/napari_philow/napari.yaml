@@ -1,5 +1,5 @@
 name: napari-PHILOW
-schema_version: 0.1.1
+schema_version: 0.1.2
 contributions:
   commands:
   - id: napari-PHILOW.AnnotationMode
@@ -14,6 +14,7 @@ contributions:
   - id: napari-PHILOW.Selector
     title: Create Selector
     python_name: napari_philow._selector:Selector
+
   widgets:
   - command: napari-PHILOW.AnnotationMode
     display_name: Annotation Mode

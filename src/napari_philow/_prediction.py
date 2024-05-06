@@ -1,11 +1,13 @@
 import os
 import shutil
+import warnings
 from pathlib import Path
 
 import pandas as pd
 import torch
 from qtpy.QtWidgets import (QWidget, QVBoxLayout, QPushButton, QSizePolicy, QLabel, QFileDialog,
                             QCheckBox)
+from qtpy.QtCore import Qt
 from segmentation_models_pytorch import UnetPlusPlus
 
 from napari_philow._utils import combine_blocks
@@ -20,6 +22,7 @@ class Predicter(QWidget):
         self.labelpath = ""
         self.modelpath = ""
         self.outpath = ""
+        self.mitopath = ""  # 追加: ミトコンドリアのラベルディレクトリを保持する変数
         self.btn1 = QPushButton('open', self)
         self.btn1.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.btn1.clicked.connect(self.show_dialog_o)
@@ -36,6 +39,16 @@ class Predicter(QWidget):
         self.checkBox = QCheckBox("Check the box if you want to use TAP (Three-Axis-Prediction")
         self.checkBox.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.checkBox.toggle()
+
+        self.checkBox_cristae = QCheckBox("Use cristae inference mode")  # 追加: クリステの推論モードを使うかどうかのチェックボックス
+        self.checkBox_cristae.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.checkBox_cristae.stateChanged.connect(self.toggle_mito_dir)  # 追加: チェックボックスの状態が変更されたときのシグナル接続
+        self.lbl_mito = QLabel('mitochondria mask dir', self)  # 追加: ミトコンドリアのラベルディレクトリ選択用のラベル
+        self.btn_mito = QPushButton('open', self)
+        self.btn_mito.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.btn_mito.clicked.connect(self.show_dialog_mito)
+        self.btn_mito.setVisible(False)  # 追加: 初期状態では非表示
+        self.lbl_mito.setVisible(False)  # 追加: 初期状態では非表示
 
         self.btn5 = QPushButton('predict', self)
         self.btn5.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
@@ -59,10 +72,20 @@ class Predicter(QWidget):
         vbox.addWidget(combine_blocks(self.btn3, self.lbl3))
         vbox.addWidget(combine_blocks(self.btn4, self.lbl4))
         vbox.addWidget(self.checkBox)
+        vbox.addWidget(self.checkBox_cristae)  # 追加: クリステの推論モードのチェックボックスをレイアウトに追加
+        vbox.addWidget(combine_blocks(self.btn_mito, self.lbl_mito))  # 追加: ミトコンドリアのラベルディレクトリ選択用のボタンとラベルをレイアウトに追加
         vbox.addWidget(self.btn5)
 
         self.setLayout(vbox)
         self.show()
+
+    def toggle_mito_dir(self, state):
+        if state == Qt.Checked:
+            self.btn_mito.setVisible(True)
+            self.lbl_mito.setVisible(True)
+        else:
+            self.btn_mito.setVisible(False)
+            self.lbl_mito.setVisible(False)
 
     def show_dialog_o(self):
         default_path = max(self.opath, self.labelpath, os.path.expanduser('~'))
@@ -85,6 +108,13 @@ class Predicter(QWidget):
             self.modelpath = f_name
             self.lbl3.setText(self.modelpath)
 
+    def show_dialog_mito(self):
+        default_path = max(self.opath, self.labelpath, os.path.expanduser('~'))
+        f_name = QFileDialog.getExistingDirectory(self, 'Open Directory', default_path)
+        if f_name:
+            self.mitopath = f_name
+            self.lbl_mito.setText(self.mitopath)
+
     def show_dialog_outdir(self):
         default_path = max(self.opath, self.labelpath, os.path.expanduser('~'))
         f_name = QFileDialog.getExistingDirectory(self, 'Open Directory', default_path)
@@ -101,10 +131,17 @@ class Predicter(QWidget):
         return csv, str(csvs[-1])
 
     def predicter(self):
+        if self.checkBox_cristae.isChecked() and not self.mitopath:
+            warnings.warn('Please select mitochondria mask directory for cristae inference mode.', UserWarning)
+            return
         self.ori_filenames = sorted(list(Path(self.opath).glob('./*.png')))
 
-        self.net = UnetPlusPlus(encoder_name="efficientnet-b0", encoder_weights="imagenet", in_channels=1, classes=1,
-                                activation='sigmoid')
+        if self.checkBox_cristae.isChecked() is True:
+            self.net = UnetPlusPlus(encoder_name="efficientnet-b0", encoder_weights="imagenet", in_channels=1, classes=3,
+                                    activation='sigmoid')
+        else:
+            self.net = UnetPlusPlus(encoder_name="efficientnet-b0", encoder_weights="imagenet", in_channels=1, classes=1,
+                                    activation='sigmoid')
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
         state_dict = torch.load(self.modelpath, map_location=torch.device(self.device))
         self.net.load_state_dict(state_dict)
@@ -113,14 +150,16 @@ class Predicter(QWidget):
         self.btn5.setText('predicting')
 
         if self.checkBox.isChecked() is True:
-
             self.predict()
         else:
             self.predict_single()
 
     def predict(self):
         try:
-            predict_3ax(self.opath, self.net, self.outpath, self.size, self.device)
+            if self.checkBox_cristae.isChecked() is True:
+                predict_3ax(self.opath, self.net, self.outpath, self.size, self.device, mask_dir=self.mitopath, out_channel=[0])
+            else:
+                predict_3ax(self.opath, self.net, self.outpath, self.size, self.device)
         except Exception as e:
             print(e)
         if self.labelpath != "":
@@ -129,7 +168,10 @@ class Predicter(QWidget):
 
     def predict_single(self):
         try:
-            predict_1ax(self.ori_filenames, self.net, self.outpath, self.size, self.device)
+            if self.checkBox_cristae.isChecked() is True:
+                predict_1ax(self.ori_filenames, self.net, self.outpath, self.size, self.device, mask_dir=self.mitopath, out_channel=[0])
+            else:
+                predict_1ax(self.ori_filenames, self.net, self.outpath, self.size, self.device)
         except Exception as e:
             print(e)
         if self.labelpath != "":
