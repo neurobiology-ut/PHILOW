@@ -111,6 +111,24 @@ To train on your GPU machine (or with CPU),
 5) Click on the "start training" button   
 
 6) Dice score and dice loss are displayed. For more detail, check the command line for the progress of training. If you want to stop in the middle, click stop button.   
+
+##### IF YOU WANT TO SEGMENT CRISTAE AREA IN THE EM DATASET
+
+1) Plugins > napari-PHILOW > Trainer
+
+2) Click on the "Cristae segmentation mode" button   
+
+3) Select original dir : all slices must be in separate PNG and must be sequentially numbered (e.g. 000.png, 001.png ...)  
+
+4) Select mito mask dir : all label images should be named same as original images
+
+5) Select dir for save trained model  
+
+6) Select cristae labels dir : all label images should be named same as original images and contains data management csv file  
+
+7) Click on the "start training" button   
+
+8) Dice score and dice loss are displayed. For more detail, check the command line for the progress of training. If you want to stop in the middle, click stop button.   
    
 #### Predict
 To predict labels on your machine,  
