@@ -111,6 +111,24 @@ To train on your GPU machine (or with CPU),
 5) Click on the "start training" button   
 
 6) Dice score and dice loss are displayed. For more detail, check the command line for the progress of training. If you want to stop in the middle, click stop button.   
+
+##### IF YOU WANT TO SEGMENT CRISTAE AREA IN THE EM DATASET
+
+1) Plugins > napari-PHILOW > Trainer
+
+2) Click on the "Cristae segmentation mode" button   
+
+3) Select original dir : all slices must be in separate PNG and must be sequentially numbered (e.g. 000.png, 001.png ...)  
+
+4) Select mito mask dir : all label images should be named same as original images
+
+5) Select dir for save trained model  
+
+6) Select cristae labels dir : all label images should be named same as original images and contains data management csv file  
+
+7) Click on the "start training" button   
+
+8) Dice score and dice loss are displayed. For more detail, check the command line for the progress of training. If you want to stop in the middle, click stop button.   
    
 #### Predict
 To predict labels on your machine,  
@@ -132,6 +150,30 @@ To predict labels on your machine,
 8) Check the command line for the progress of prediction. If you want to stop in the middle, use ctrl+C.   
 
 9) You can start the next round of annotation by selecting the merged_prediction directory as the mask dir in Annotation mode.
+
+##### IF YOU WANT TO SEGMENT CRISTAE AREA IN THE EM DATASET
+
+1) Plugins > napari-PHILOW > Predicter
+
+2) Select original dir : all slices must be in separate PNG and must be sequentially numbered (e.g. 000.png, 001.png ...)   
+
+3) (Optional) Select cristae labels dir if you want to keep labels witch were used on training, and data management csv file  
+
+4) Select model dir contains hdf5 file   
+
+5) Select output dir for predicted labels   
+
+6) Uncheck the box if you DO NOT want to use TAP (Three-Axis-Prediction)   
+
+7) Click on the "Use cristae inference mode" button   
+
+8) Select mitochondria mask dir : all label images should be named same as original images
+
+9) Click on the "predict" button  
+
+10) Check the command line for the progress of prediction. If you want to stop in the middle, use ctrl+C.   
+
+11) You can start the next round of annotation by selecting the merged_prediction directory as the mask dir in Annotation mode.
 
 ### Train and predict with Google Colab   
 If you don't have a GPU machine, you can use Google Colab to perform GPU-based training and prediction for free.    

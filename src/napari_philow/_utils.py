@@ -1,41 +1,16 @@
 import copy
 import os
+from datetime import datetime
 from pathlib import Path
 
-import cv2
 import dask
 import dask_image.imread
 from qtpy.QtWidgets import QWidget, QHBoxLayout, QSlider, QLabel
 from qtpy.QtCore import Qt
 import numpy as np
 from scipy import ndimage
-from skimage import io
-from skimage.filters import gaussian
+from skimage import io, morphology
 import pandas as pd
-from tqdm import tqdm
-
-
-def combine_blocks(block1, block2):
-    temp_widget = QWidget()
-    temp_layout = QHBoxLayout()
-    temp_layout.addWidget(block1)
-    temp_layout.addWidget(block2)
-    temp_widget.setLayout(temp_layout)
-    return temp_widget
-
-
-def normalize_x(image):
-    image = image / 127.5 - 1
-    return image
-
-
-def normalize_y(image):
-    image = image / 255
-    return image
-
-
-def denormalize_y(image):
-    return image * 255
 
 
 def renormalize_8bit(image):
@@ -47,22 +22,6 @@ def renormalize_8bit(image):
     return image.astype(np.uint8)
 
 
-def annotation_to_input(label_ermito):
-    mito = (label_ermito == 1) * 255
-    er = (label_ermito == 2) * 255
-    mito = normalize_y(mito)
-    er = normalize_y(er)
-    mito_anno = np.zeros_like(mito)
-    er_anno = np.zeros_like(er)
-    mito = gaussian(mito, sigma=2) * 255
-    er = gaussian(er, sigma=2) * 255
-    mito_anno[:, :] = mito
-    er_anno[:, :] = er
-    anno = np.concatenate([mito_anno[:, :, np.newaxis], er_anno[:, :, np.newaxis]], 2)
-    anno = normalize_x(anno[np.newaxis, :, :, :])
-    return anno
-
-
 def check_csv(project_path, ext):
     if not os.path.isfile(os.path.join(project_path, os.path.basename(project_path) + '.csv')):
         cols = ['project', 'type', 'ext', 'z', 'y', 'x', 'z_size', 'y_size', 'x_size', 'created_date', 'update_date',
@@ -72,7 +31,7 @@ def check_csv(project_path, ext):
         images_original = dask_image.imread.imread(filename_pattern_original)
         z, y, x = images_original.shape
         record = pd.Series(
-            [os.path.basename(project_path), 'dataset', '.tif', 0, 0, 0, z, y, x, datetime.datetime.now(),
+            [os.path.basename(project_path), 'dataset', '.tif', 0, 0, 0, z, y, x, datetime.now(),
              '', os.path.join(project_path, 'dataset/Original_size/Original'), ''], index=df.columns)
         df = df.append(record, ignore_index=True)
         df.to_csv(os.path.join(project_path, os.path.basename(project_path) + '.csv'))
@@ -105,7 +64,7 @@ def check(project_path, ext):
 def load_images(directory):
     filename_pattern_original = os.path.join(directory, '*png')
     images_original = dask_image.imread.imread(filename_pattern_original)
-    renormalized_images_original = dask.array.asarray([ renormalize_8bit(images_original[z]) for z in range(images_original.shape[0]) ])
+    renormalized_images_original = dask.array.asarray([ renormalize_8bit(images_original[z]) for z in range(images_original.shape[0])])
     return renormalized_images_original
 
 
@@ -128,13 +87,21 @@ def load_saved_masks(mod_mask_dir):
     return base_label, [x.name for x in sorted(list(Path(mod_mask_dir).glob('./*png')))]
 
 
+def load_mask_masks(mask_dir):
+    filename_pattern_label = os.path.join(mask_dir, '*png')
+    images_label = dask_image.imread.imread(filename_pattern_label)
+    if images_label.max() == 1:
+        pass
+    else:
+        images_label = 1 * (images_label > 0)
+    return images_label.compute()
+
 def load_raw_masks(raw_mask_dir):
     filename_pattern_raw = os.path.join(raw_mask_dir, '*png')
     images_raw = dask_image.imread.imread(filename_pattern_raw)
     images_raw = images_raw.compute()
     base_label = np.where((126 < images_raw) & (images_raw < 171), 255, 0)
     return base_label
-
 
 def combine_blocks(block1, block2):
     temp_widget = QWidget()
@@ -150,7 +117,6 @@ def save_masks(labels, out_path, filenames):
     for i in range(num):
         label = labels[i]
         io.imsave(os.path.join(out_path, filenames[i]), label)
-
 
 def label_and_sort(base_label):
     labeled = ndimage.label(base_label, structure=np.ones((3, 3, 3)))[0]
@@ -218,58 +184,46 @@ def show_so_layer(args):
         t_layer.data = label_ct(labeled_array, nums, value)
 
 
-def load_X_gray(folder_path):
-    image_files = []
-    for file in os.listdir(folder_path):
-        base, ext = os.path.splitext(file)
-        if ext == '.png':
-            image_files.append(file)
-        else:
-            pass
+def preprocess_cristae(ori_path, mito_path, cristae_path, names, crop_size=1000):
+    ori_imgs = [renormalize_8bit(io.imread(os.path.join(ori_path, name), as_gray=True)) for name in names]
+    mito_imgs = [io.imread(os.path.join(mito_path, name), as_gray=True) for name in names]
+    cristae_imgs = [io.imread(os.path.join(cristae_path, name), as_gray=True) for name in names]
 
-    image_files.sort()
+    # make gap
+    preprocessed_imgs = []
+    for i in range(len(cristae_imgs)):
+        dilated_cristae_img = morphology.binary_dilation(cristae_imgs[i], morphology.disk(5))
+        dilated_cristae_img = dilated_cristae_img - cristae_imgs[i]
+        dilated_cristae_img = dilated_cristae_img * mito_imgs[i]
+        merged_img = np.concatenate([
+            cristae_imgs[i][..., np.newaxis],
+            dilated_cristae_img[..., np.newaxis],
+            np.zeros_like(cristae_imgs[i][..., np.newaxis])
+        ], axis=-1)
+        preprocessed_imgs.append(merged_img)
+    preprocessed_imgs = np.array(preprocessed_imgs)
 
-    img = cv2.imread(folder_path + os.sep + image_files[0], cv2.IMREAD_GRAYSCALE)
+    # crop
+    cropped_ori_imgs = []
+    cropped_cristae_imgs = []
+    H = ori_imgs[0].shape[0] // crop_size + 1
+    W = ori_imgs[0].shape[1] // crop_size + 1
+    for z in range(len(ori_imgs)):
+        margin_ori_img = np.zeros((H * crop_size, W * crop_size), ori_imgs[0].dtype)
+        margin_ori_img[:ori_imgs[0].shape[0], :ori_imgs[0].shape[1]] = ori_imgs[z] * mito_imgs[z]
+        margin_label_img = np.zeros((H * crop_size, W * crop_size, preprocessed_imgs.shape[3]), preprocessed_imgs.dtype)
+        margin_label_img[:preprocessed_imgs.shape[1], :preprocessed_imgs.shape[2]] = preprocessed_imgs[z]
+        for h in range(H):
+            for w in range(W):
+                cropped_ori_img = margin_ori_img[h * crop_size:(h + 1) * crop_size, w * crop_size:(w + 1) * crop_size]
+                if np.max(cropped_ori_img) > 0:
+                    cropped_ori_imgs.append(cropped_ori_img)
+                    cropped_label_img = margin_label_img[h * crop_size:(h + 1) * crop_size,
+                                        w * crop_size:(w + 1) * crop_size]
+                    cropped_label_img *= 255
+                    cropped_cristae_imgs.append(cropped_label_img)
 
-    images = np.zeros((len(image_files), img.shape[0], img.shape[1], 1), np.float32)
-    for i, image_file in tqdm(enumerate(image_files)):
-        image = cv2.imread(folder_path + os.sep + image_file, cv2.IMREAD_GRAYSCALE)
-        image = image[:, :, np.newaxis]
-        images[i] = normalize_x(image)
-
-    print(images.shape)
-
-    return images, image_files
-
-
-def load_Y_gray(folder_path, thresh=None, normalize=False):
-    image_files = []
-    for file in os.listdir(folder_path):
-        base, ext = os.path.splitext(file)
-        if ext == '.png':
-            image_files.append(file)
-        else:
-            pass
-
-    image_files.sort()
-
-    img = cv2.imread(folder_path + os.sep + image_files[0], cv2.IMREAD_GRAYSCALE)
-
-    images = np.zeros((len(image_files), img.shape[0], img.shape[1], 1), np.float32)
-
-    for i, image_file in tqdm(enumerate(image_files)):
-        image = cv2.imread(folder_path + os.sep + image_file, cv2.IMREAD_GRAYSCALE)
-        if thresh:
-            ret, image = cv2.threshold(image, thresh, 255, cv2.THRESH_BINARY)
-        image = image[:, :, np.newaxis]
-        if normalize:
-            images[i] = normalize_y(image)
-        else:
-            images[i] = image
-
-    print(images.shape)
-
-    return images, image_files
+    return np.array(cropped_ori_imgs), np.array(cropped_cristae_imgs)
 
 
 def select_train_data(dataframe, ori_imgs, label_imgs, ori_filenames):
