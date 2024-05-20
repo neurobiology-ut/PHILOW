@@ -55,7 +55,7 @@ napari
 
 1) Plugins > napari-PHILOW > Annotation Mode
 
-2) Select original dir : all slices must be in separate PNG and must be sequentially numbered (e.g. 000.png, 001.png ...)
+2) Select original dir : all slices must be in separate 8bit PNG and must be sequentially numbered (e.g. 000.png, 001.png ...)
 
 3) Select mask dir : To resume from the middle of the annotation, specify here the name of the directory containing the mask image. The directory must contain the same number of files with the same name as the original image.   
  If you are starting a completely new annotation, you do not need to specify a directory. The directory for mask is automatically created and blank images are generated and stored.
@@ -102,7 +102,7 @@ To train on your GPU machine (or with CPU),
 
 1) Plugins > napari-PHILOW > Trainer
    
-2) Select original dir : all slices must be in separate PNG and must be sequentially numbered (e.g. 000.png, 001.png ...)   
+2) Select original dir : all slices must be in separate 8bit PNG and must be sequentially numbered (e.g. 000.png, 001.png ...)   
    
 3) Select labels dir : all label images should be named same as original images and contains data management csv file   
    
@@ -135,7 +135,7 @@ To predict labels on your machine,
 
 1) Plugins > napari-PHILOW > Predicter
    
-2) Select original dir : all slices must be in separate PNG and must be sequentially numbered (e.g. 000.png, 001.png ...)   
+2) Select original dir : all slices must be in separate 8bit PNG and must be sequentially numbered (e.g. 000.png, 001.png ...)   
    
 3) (Optional) Select labels dir if you want to keep labels witch were used on training, and data management csv file   
    
@@ -205,22 +205,24 @@ Hiroki Kawai <br>
 
 
 # How to Cite <br>
-Shogo Suga, Koki Nakamura, Yu Nakanishi, Bruno M Humbel, Hiroki Kawai, Yusuke Hirabayashi, An interactive deep learning-based approach reveals mitochondrial cristae topologies
+Shogo Suga, Koki Nakamura, Yu Nakanishi, Bruno M Humbel, Hiroki Kawai, Yusuke Hirabayashi, An interactive deep learning-based approach reveals mitochondrial cristae topologies. PLoS Biol 21(8): e3002246.
 <a href="https://doi.org/10.1371/journal.pbio.3002246">https://doi.org/10.1371/journal.pbio.3002246</a>
 
 
 ```
-@article {pmid37651352,
-	author = {Suga, Shogo and Nakamura, Koki and Yu, Nakanishi and Humbel, Bruno M and Kawai, Hiroki and Hirabayashi, Yusuke},
-	title = {An interactive deep learning-based approach reveals mitochondrial cristae topologies},
-	journal = {PLoS Biol},
-	year = {2023},
-	volume = {21},
-	number = {8},
-	pages = {e3002246},
-	month = {Aug},
-	doi = {10.1371/journal.pbio.3002246},
-	URL = {https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3002246},
+@article {Suga_Nakamura_Nakanishi_Humbel_Kawai_Hirabayashi_2023,
+	title={An interactive deep learning-based approach reveals mitochondrial cristae topologies},
+	volume={21},
+	ISSN={1545-7885},
+	DOI={10.1371/journal.pbio.3002246},
+	number={8},
+	journal={PLOS Biology},
+	publisher={Public Library of Science},
+	author={Suga, Shogo and Nakamura, Koki and Nakanishi, Yu and Humbel, Bruno M. and Kawai, Hiroki and Hirabayashi, Yusuke},
+	year={2023},
+	month={Aug},
+	pages={e3002246},
+	language={en}
 }
 ```
 
