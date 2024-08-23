@@ -184,8 +184,6 @@ class Trainer(QWidget):
             self.image_layer.data = image_mask_pred[0]
         if self.label_layer is None:
             if image_mask_pred[1] is not None:
-                #self.label_layer = self._viewer.add_labels(1 * (image_mask_pred[1] > 0.5), name='label',
-                #                                           color={1: 'green'}, blending='additive')
                 self.label_layer = self._viewer.add_labels(1 * (image_mask_pred[1] > 0.5), name='label',
                                                            colormap=DirectLabelColormap(color_dict={1: 'green'}), blending='additive')
         else:
@@ -193,8 +191,6 @@ class Trainer(QWidget):
                 self.label_layer.data = 1 * (image_mask_pred[1] > 0.5)
         if self.prediction_layer is None:
             if image_mask_pred[2] is not None:
-                #self.prediction_layer = self._viewer.add_labels(1 * (image_mask_pred[2] > 0.5), name='prediction',
-                #                                                color={1: 'magenta'}, blending='additive')
                 self.prediction_layer = self._viewer.add_labels(1 * (image_mask_pred[2] > 0.5), name='prediction',
                                                                 colormap=DirectLabelColormap(color_dict={1: 'magenta'}), blending='additive')
         else:
