@@ -122,6 +122,7 @@ def predict_1ax(ori_filenames, net, out_dir, size, device, mask_dir=None, out_ch
         # threshed
         if out_channel is not None:
             pred_imgs_ave = pred_imgs_ave[:, :, out_channel]
+            pred_imgs_ave = np.squeeze(pred_imgs_ave)
         img = np.where(pred_imgs_ave >= 127, 1, 0)
         io.imsave(f"{out_dir_merge}/{filename.name}", img.astype("uint8"))
 
