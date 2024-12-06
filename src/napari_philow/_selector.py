@@ -9,6 +9,8 @@ from magicgui import magicgui
 from qtpy.QtWidgets import QWidget, QVBoxLayout, QPushButton, QSizePolicy, QLabel, QFileDialog, QCheckBox
 from skimage import io
 
+from napari.utils.colormaps import DirectLabelColormap
+
 from napari_philow._utils import combine_blocks, load_images, load_saved_masks, save_masks
 
 
@@ -105,8 +107,8 @@ class Selector(QWidget):
         except NameError:
             pass
         image_layer = self._viewer.add_image(images_original, contrast_limits=[0, 255])
-        self._viewer.add_labels(base_label, name='base', color={1: 'red', 2: 'blue', 3: 'green'})
-        self._viewer.add_labels(only_label, name="selected_objects", color={1: 'blue', 2: 'green', 3: 'red'})
+        self._viewer.add_labels(base_label, name='base', colormap=DirectLabelColormap(color_dict={1: 'red', 2: 'blue', 3: 'green'}))
+        self._viewer.add_labels(only_label, name="selected_objects", colormap=DirectLabelColormap(color_dict={1: 'blue', 2: 'green', 3: 'red'}))
 
         # calc label
         # labels_imgs, _ = ndmeasure.label((label == 1).astype(int))
