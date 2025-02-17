@@ -38,6 +38,7 @@ class Selector(QWidget):
         self.lbl2 = QLabel('original label dir', self)
         self.lbl3 = QLabel('selected label dir', self)
         self.build()
+        self.filenames = None
 
     def build(self):
         vbox = QVBoxLayout()
@@ -73,14 +74,15 @@ class Selector(QWidget):
     def launch_napari_selector(self):
         images = load_images(self.opath)
         labels, _ = load_saved_masks(self.modpath)
+        self.filenames = [fn.name for fn in sorted(list(Path(self.opath).glob('./*png')))]
         if self.select_path == "":
             self.select_path = os.path.join(self.modpath + '_selected')
             os.makedirs(self.select_path, exist_ok=True)
         if len(os.listdir(self.select_path)) == 0:
             selects = da.zeros_like(images)
-            filenames = [fn.name for fn in sorted(list(Path(self.opath).glob('./*png')))]
+            #self.filenames = [fn.name for fn in sorted(list(Path(self.opath).glob('./*png')))]
             for i in range(len(selects)):
-                io.imsave(os.path.join(self.select_path, str(i).zfill(4) + '.png'), selects[i])
+                io.imsave(os.path.join(self.select_path, self.filenames[i]), selects[i])
         else:
             selects, _ = load_saved_masks(self.select_path)
 
@@ -112,7 +114,8 @@ class Selector(QWidget):
 
         # calc label
         # labels_imgs, _ = ndmeasure.label((label == 1).astype(int))
-        labels_imgs = measure.label((label == 1).astype(int), connectivity=1)
+        #labels_imgs = measure.label((label == 1).astype(int), connectivity=1)
+        #print("label num:", np.max(labels_imgs))
         layer1 = self._viewer.layers[1]
         layer2 = self._viewer.layers[2]
 
@@ -122,10 +125,13 @@ class Selector(QWidget):
 
             @layer1.bind_key('q', overwrite=True)
             def select_event(event):
-                global base_label
-                global only_label
+                #global base_label
+                #global only_label
+                base_label = self._viewer.layers["base"].data
+                only_label = self._viewer.layers["selected_objects"].data
+                labels_imgs = measure.label((base_label == 1).astype(int), connectivity=1)
                 q_point = np.round(self._viewer.cursor.position).astype(int)
-                print(q_point)
+                print(q_point, labels_imgs.max())
                 target_label = labels_imgs[q_point[0]][q_point[1]][q_point[2]]
                 print("select_label : ", target_label, "select_point : ", q_point)
                 if target_label:
@@ -146,10 +152,14 @@ class Selector(QWidget):
 
             @layer2.bind_key('w', overwrite=True)
             def deselect_event(event):
-                global base_label
-                global only_label
+                #global base_label
+                #global only_label
+                base_label = self._viewer.layers["base"].data
+                only_label = self._viewer.layers["selected_objects"].data
+                labels_imgs = measure.label((only_label == 1).astype(int), connectivity=1)
+
                 w_point = np.round(self._viewer.cursor.position).astype(int)
-                print(w_point)
+                print(w_point, labels_imgs.max())
                 target_label = labels_imgs[w_point[0]][w_point[1]][w_point[2]]
                 print("select_label : ", target_label, "select_point : ", w_point)
                 if target_label:
@@ -183,7 +193,9 @@ class Selector(QWidget):
         @magicgui(call_button="save")
         def saver():
             print("The directory is:", self.select_path)
-            return save_masks(layer1.data, self.mod_path), save_masks(layer2.data, self.select_path)
+            save_masks(self._viewer.layers["base"].data, self.modpath,  self.filenames)
+            save_masks(self._viewer.layers["selected_objects"].data, self.select_path, self.filenames)
+            return True, True
 
         # gui4 = saver.Gui(show=True)
         # view1.window.add_dock_widget(gui4, area='bottom')
